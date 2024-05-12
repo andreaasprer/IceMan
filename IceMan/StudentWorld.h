@@ -4,8 +4,8 @@
 #include "GameWorld.h"
 #include "GameConstants.h"
 #include <string>
+#include "Actor.h"
 
-// Students:  Add code to this file, StudentWorld.cpp, Actor.h, and Actor.cpp
 
 class StudentWorld : public GameWorld
 {
@@ -17,22 +17,45 @@ public:
 
 	virtual int init()
 	{
+		// initialize iceman
+		m_iceman = new Iceman(this, 10);
+
+		// set up the ice field
+		for (int x = 0; x < 64; x++) {
+			for (int y = 0; y < 60; y++) {
+				if (x >= 30 && x < 34 && y > 3) { // dont put ice for starting middle tunnel
+					m_iceField[x][y] = nullptr;
+				}
+				else
+					m_iceField[x][y] = new Ice(this, x, y);
+			}
+		}
+
 		return GWSTATUS_CONTINUE_GAME;
 	}
 
 	virtual int move()
 	{
-		// This code is here merely to allow the game to build, run, and terminate after you hit enter a few times.
-		// Notice that the return value GWSTATUS_PLAYER_DIED will cause our framework to end the current level.
-		decLives();
-		return GWSTATUS_PLAYER_DIED;
+		m_iceman->doSomething();
+
+		if (m_iceman->isAlive() == false) {
+			decLives();
+			return GWSTATUS_PLAYER_DIED;
+		}
+
+		return GWSTATUS_CONTINUE_GAME;
 	}
 
 	virtual void cleanUp()
 	{
 	}
 
+	void clearIce(int x, int y);
+
+
 private:
+	Iceman* m_iceman;
+	Ice* m_iceField[64][64];
 };
 
 #endif // STUDENTWORLD_H_
