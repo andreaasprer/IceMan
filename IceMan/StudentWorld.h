@@ -14,6 +14,14 @@ public:
 		: GameWorld(assetDir)
 	{
 	}
+	~StudentWorld() {
+		delete m_iceman;
+		for (int x = 0; x < 64; x++) {
+			for (int y = 0; y < 60; y++) {
+				delete m_iceField[x][y];
+			}
+		}
+	}
 
 	virtual int init()
 	{
@@ -48,6 +56,12 @@ public:
 
 	virtual void cleanUp()
 	{
+		delete m_iceman;
+		for (int x = 0; x < 64; x++) {
+			for (int y = 0; y < 60; y++) {
+				delete m_iceField[x][y];
+			}
+		}
 	}
 
 	void clearIce(int x, int y);

@@ -28,10 +28,10 @@ private:
 // base class for Iceman and NPCs (protestors)
 class Character : public Actor {
 public:
-	Character(int imageID, int startX, int startY, StudentWorld* sw, int health, Direction dir = right, double size = 1.0, unsigned int depth = 0)
+	Character(int imageID, int startX, int startY, StudentWorld* sw, int hitPoints, Direction dir = right, double size = 1.0, unsigned int depth = 0)
 		: Actor(imageID, startX, startY, sw, dir, size, depth) {
 		setVisible(true);
-		m_hitPoints = health;
+		m_hitPoints = hitPoints;
 	}
 	virtual ~Character() {}
 
@@ -49,6 +49,10 @@ public:
 	Iceman(StudentWorld* sw, int health) : Character(IID_PLAYER, 30, 60, sw, health, right, 1.0, 0) {};
 	virtual ~Iceman() {}
 	virtual void doSomething() override;
+private:
+	int m_waterLevel = 5;
+	int m_sonar = 1;
+	int m_goldNuggets = 0;
 };
 
 
