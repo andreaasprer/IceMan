@@ -31,3 +31,49 @@ void StudentWorld::clearIce(int x, int y) {
 		playSound(SOUND_DIG);
 	}
 }
+
+
+void StudentWorld::spawnBoulders(int boulderNum) {
+	int currentNum = 0;
+	bool canPlace = true;
+
+	while (currentNum < boulderNum) {
+		// randomize coordinates boulder
+		int x = rand() % 61; // 0 - 60
+		int y = 20 + (rand() % 37); // 20 - 56
+
+
+		if (x > 26 && x < 34 && y > 3) { // check if in mine shaft
+			canPlace = false;
+		}
+		else {
+			// go through actor list and check if distance of boulder not too close to other actors
+			for (Actor* actor : actorList) {
+				if (!validEuclideanDistance(x, y, actor->getX(), actor->getY())) {
+					canPlace = false;
+					break;
+				}
+			}
+		}
+
+		if (canPlace) {
+			actorList.push_back(new Boulder(this, x, y));
+			currentNum++;
+		}
+
+
+		// TODO: clear out ice where boulder is
+
+
+		canPlace = true;
+	}
+}
+
+
+bool StudentWorld::validEuclideanDistance(int x1, int y1, int x2, int y2) {
+	int distance = sqrt(pow(x1 - x2, 2) + pow(y1 - y2, 2));
+	if (distance < 6) { return false; }
+	return true;
+}
+
+

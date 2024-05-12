@@ -64,5 +64,12 @@ public:
 
 };
 
+class Boulder : public Actor {
+public:
+	Boulder(StudentWorld* sw, int x, int y) : Actor(IID_BOULDER, x, y, sw, down, 1, 1) { setVisible(true); };
+	virtual ~Boulder() {}
+	virtual void doSomething() override {};
+};
+
 
 #endif // ACTOR_H_
