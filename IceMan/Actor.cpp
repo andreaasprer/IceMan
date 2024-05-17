@@ -24,7 +24,8 @@ void Iceman::doSomething() {
 				moveTo(getX(), getY());
 			}
 			else if (getDirection() == right) {
-				moveTo(getX() + 1, getY());
+				if (!(getWorld()->blockedByBoulder(getX(), getY(), right)))
+					moveTo(getX() + 1, getY());
 			}
 			else {
 				setDirection(right);
@@ -35,7 +36,8 @@ void Iceman::doSomething() {
 				moveTo(getX(), getY());
 			}
 			else if (getDirection() == left) {
-				moveTo(getX() - 1, getY());
+				if (!(getWorld()->blockedByBoulder(getX(), getY(), left)))
+					moveTo(getX() - 1, getY());
 			}
 			else {
 				setDirection(left);
@@ -46,7 +48,8 @@ void Iceman::doSomething() {
 				moveTo(getX(), getY());
 			}
 			else if (getDirection() == up) {
-				moveTo(getX(), getY() + 1);
+				if (!(getWorld()->blockedByBoulder(getX(), getY(), up)))
+					moveTo(getX(), getY() + 1);
 			}
 			else {
 				setDirection(up);
@@ -57,7 +60,8 @@ void Iceman::doSomething() {
 				moveTo(getX(), getY());
 			}
 			else if (getDirection() == down) {
-				moveTo(getX(), getY() - 1);
+				if (!(getWorld()->blockedByBoulder(getX(), getY(), down)))
+					moveTo(getX(), getY() - 1);
 			}
 			else {
 				setDirection(down);

@@ -19,10 +19,13 @@ public:
 	StudentWorld* getWorld() { return m_studentWorld; }
 	bool isAlive() { return m_alive; }
 	void setDead() { m_alive = false; }
+	void setBlockAbility(bool flag) { m_blockAbility = flag; }
+	bool getBlockAbility() { return m_blockAbility; }
 
 private:
 	StudentWorld* m_studentWorld;
 	bool m_alive;
+	bool m_blockAbility = false; // only actor that can block is boulder
 };
 
 // base class for Iceman and NPCs (protestors)
@@ -66,7 +69,10 @@ public:
 
 class Boulder : public Actor {
 public:
-	Boulder(StudentWorld* sw, int x, int y) : Actor(IID_BOULDER, x, y, sw, down, 1, 1) { setVisible(true); };
+	Boulder(StudentWorld* sw, int x, int y) : Actor(IID_BOULDER, x, y, sw, down, 1.0, 1) {
+		setVisible(true);
+		setBlockAbility(true);
+	};
 	virtual ~Boulder() {}
 	virtual void doSomething() override {};
 };

@@ -9,6 +9,7 @@
 #include <iostream>
 #include <list>
 #include<cstdlib>
+
 using namespace std;
 
 
@@ -53,6 +54,8 @@ public:
 	virtual int move()
 	{
 		m_iceman->doSomething();
+		cout << "X: " << m_iceman->getX() << endl;
+		cout << "Y: " << m_iceman->getY() << endl;
 
 		if (m_iceman->isAlive() == false) {
 			decLives();
@@ -81,7 +84,9 @@ public:
 	void clearIce(int x, int y);
 
 	void spawnBoulders(int boulderNum);
-	bool validEuclideanDistance(int x1, int y1, int x2, int y2);
+	bool validEuclideanDistance(int x1, int y1, int x2, int y2, int minRadius);
+	bool blockedByBoulder(const int& x, const int& y, Actor::Direction direction);
+
 
 private:
 	Iceman* m_iceman;
