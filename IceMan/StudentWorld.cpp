@@ -1,5 +1,5 @@
 #include "StudentWorld.h"
-#include <string>
+
 using namespace std;
 
 GameWorld* createStudentWorld(string assetDir)
@@ -17,6 +17,34 @@ void StudentWorld::removeDeadGameObjects() {
 			it++; // increment iterator only when an actor is not deleted
 		}
 	}
+}
+
+void StudentWorld::setDisplayText() {
+	int level = getLevel();
+	int lives = getLives();
+	int health = m_iceman->getHitPoints() * 10;
+	int squirts = m_iceman->getSquirtsLeft();
+	int gold = m_iceman->getGoldCount();
+	int barrelsLeft = numOfBarrels - m_iceman->getBarrelCount();
+	int sonar = m_iceman->getSonarCount();
+	int score = getScore();
+
+	string s = formatString(level, lives, health, squirts, gold, barrelsLeft, sonar, score);
+	setGameStatText(s);
+}
+
+string StudentWorld::formatString(int level, int lives, int health, int squirts, int gold, int barrelsLeft, int sonar, int score) {
+	std::stringstream sout;
+	sout << "Lvl: " << setw(2) << level << "  "
+		<< "Lives: " << setw(1) << lives << "  "
+		<< "Hlth: " << setw(3) << health << "%  "
+		<< "Wtr: " << setw(2) << squirts << "  "
+		<< "Gld: " << setw(2) << gold << "  "
+		<< "Oil Left: " << setw(2) << barrelsLeft << "  "
+		<< "Sonar: " << setw(2) << sonar << "  "
+		<< "Scr: " << setw(6) << setfill('0') << score;
+
+	return sout.str();
 }
 
 void StudentWorld::clearIce(int x, int y) {

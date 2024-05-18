@@ -16,11 +16,11 @@ public:
 	virtual void doSomething() = 0;
 
 
-	StudentWorld* getWorld() { return m_studentWorld; }
-	bool isAlive() { return m_alive; }
+	StudentWorld* getWorld() const { return m_studentWorld; }
+	bool isAlive() const { return m_alive; }
 	void setDead() { m_alive = false; }
 	void setBlockAbility(bool flag) { m_blockAbility = flag; }
-	bool getBlockAbility() { return m_blockAbility; }
+	bool getBlockAbility() const { return m_blockAbility; }
 
 private:
 	StudentWorld* m_studentWorld;
@@ -40,7 +40,7 @@ public:
 
 
 	void setHitPoints(int health) { m_hitPoints = health; }
-	int getHitPoints() { return m_hitPoints; }
+	int getHitPoints() const { return m_hitPoints; }
 
 private:
 	int m_hitPoints = 0;
@@ -52,10 +52,16 @@ public:
 	Iceman(StudentWorld* sw, int health) : Character(IID_PLAYER, 30, 60, sw, health, right, 1.0, 0) {};
 	virtual ~Iceman() {}
 	virtual void doSomething() override;
+
+	int getSquirtsLeft() const { return m_waterLevel; }
+	int getGoldCount() const { return m_goldNuggets; }
+	int getSonarCount() const { return m_sonar; }
+	int getBarrelCount() const { return m_barrels; }
 private:
 	int m_waterLevel = 5;
 	int m_sonar = 1;
 	int m_goldNuggets = 0;
+	int m_barrels = 0;
 };
 
 
@@ -80,6 +86,7 @@ private:
 	enum BoulderState { stable, waiting, falling };
 	BoulderState currentState;
 	int waitTime = 30;
+	bool hitsCharacter(StudentWorld* sw);
 };
 
 

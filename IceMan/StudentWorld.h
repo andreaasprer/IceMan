@@ -9,6 +9,8 @@
 #include <iostream>
 #include <list>
 #include<cstdlib>
+#include <iomanip>
+#include <sstream>
 
 using namespace std;
 
@@ -29,7 +31,7 @@ public:
 		int currentLevel = int(getLevel());
 		int B = min(currentLevel / 2 + 2, 9); // number of boulders in each level
 		int G = max(5 - currentLevel / 2, 2); // number of gold in each level
-		int L = min(2 + currentLevel, 21);    // number of oil barrels in each level
+		numOfBarrels = min(2 + currentLevel, 21);    // number of oil barrels in each level
 
 
 		// initialize iceman
@@ -53,6 +55,8 @@ public:
 
 	virtual int move()
 	{
+		setDisplayText();
+
 		m_iceman->doSomething();
 		/*cout << "X: " << m_iceman->getX() << endl;
 		cout << "Y: " << m_iceman->getY() << endl;*/
@@ -94,16 +98,19 @@ public:
 	void clearIce(int x, int y);
 	Ice* getIce(int x, int y) const { return m_iceField[x][y]; }
 	list<Actor*> getActorList() const { return actorList; }
+	Iceman* getPlayer() const { return m_iceman; }
 
 	void spawnBoulders(int boulderNum);
 	bool validEuclideanDistance(int x1, int y1, int x2, int y2, int minRadius);
 	bool blockedByBoulder(const int& x, const int& y, Actor::Direction direction);
-
+	void setDisplayText();
+	string formatString(int level, int lives, int health, int squirts, int gold, int barrelsLeft, int sonar, int score);
 
 private:
 	Iceman* m_iceman;
 	Ice* m_iceField[64][64];
 	list<Actor*> actorList;
+	int numOfBarrels;
 };
 
 #endif // STUDENTWORLD_H_

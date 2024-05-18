@@ -116,7 +116,18 @@ void Boulder::doSomething() {
 				}
 			}
 		}
+		if (hitsCharacter(getWorld())) {
+			getWorld()->getPlayer()->setDead();
+			getWorld()->playSound(SOUND_PLAYER_GIVE_UP);
+		}
 
 		moveTo(getX(), getY() - 1);
 	}
+}
+
+bool Boulder::hitsCharacter(StudentWorld* sw) {
+	if (abs(getX() - sw->getPlayer()->getX()) < 4 && getY() == sw->getPlayer()->getY() + 4) {
+		return true;
+	}
+	return false;
 }
