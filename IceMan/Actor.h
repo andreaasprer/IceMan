@@ -72,9 +72,14 @@ public:
 	Boulder(StudentWorld* sw, int x, int y) : Actor(IID_BOULDER, x, y, sw, down, 1.0, 1) {
 		setVisible(true);
 		setBlockAbility(true);
+		currentState = stable;
 	};
 	virtual ~Boulder() {}
-	virtual void doSomething() override {};
+	virtual void doSomething() override;
+private:
+	enum BoulderState { stable, waiting, falling };
+	BoulderState currentState;
+	int waitTime = 30;
 };
 
 

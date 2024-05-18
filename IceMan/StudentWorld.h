@@ -54,13 +54,22 @@ public:
 	virtual int move()
 	{
 		m_iceman->doSomething();
-		cout << "X: " << m_iceman->getX() << endl;
-		cout << "Y: " << m_iceman->getY() << endl;
+		/*cout << "X: " << m_iceman->getX() << endl;
+		cout << "Y: " << m_iceman->getY() << endl;*/
+
+		for (Actor* actor : actorList) {
+			if (actor->isAlive()) {
+				actor->doSomething();
+			}
+		}
+
+		removeDeadGameObjects();
 
 		if (m_iceman->isAlive() == false) {
 			decLives();
 			return GWSTATUS_PLAYER_DIED;
 		}
+
 
 		return GWSTATUS_CONTINUE_GAME;
 	}
@@ -81,7 +90,10 @@ public:
 		actorList.clear();
 	}
 
+	void removeDeadGameObjects();
 	void clearIce(int x, int y);
+	Ice* getIce(int x, int y) const { return m_iceField[x][y]; }
+	list<Actor*> getActorList() const { return actorList; }
 
 	void spawnBoulders(int boulderNum);
 	bool validEuclideanDistance(int x1, int y1, int x2, int y2, int minRadius);

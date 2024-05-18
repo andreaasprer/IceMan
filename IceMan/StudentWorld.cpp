@@ -7,6 +7,18 @@ GameWorld* createStudentWorld(string assetDir)
 	return new StudentWorld(assetDir);
 }
 
+void StudentWorld::removeDeadGameObjects() {
+	for (auto it = actorList.begin(); it != actorList.end();) {
+		if (!(*it)->isAlive()) {
+			delete* it;
+			it = actorList.erase(it); // iterator becomes invalid
+		}
+		else {
+			it++; // increment iterator only when an actor is not deleted
+		}
+	}
+}
+
 void StudentWorld::clearIce(int x, int y) {
 	// flag to see if ice was cleared
 	bool cleared = false;
