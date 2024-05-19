@@ -58,6 +58,8 @@ public:
 	int getSonarCount() const { return m_sonar; }
 	int getBarrelCount() const { return m_barrels; }
 	void foundBarrel() { m_barrels++; }
+	void foundGoldNugget() { m_goldNuggets++; }
+	void droppedGoldNugget() { m_goldNuggets--; }
 private:
 	int m_waterLevel = 5;
 	int m_sonar = 1;
@@ -99,4 +101,25 @@ public:
 	virtual void doSomething() override;
 };
 
+class GoldNugget : public Actor {
+public:
+	GoldNugget(StudentWorld* sw, int x, int y, bool droppedByIceman) : Actor(IID_GOLD, x, y, sw, right, 1.0, 2) {
+		if (!droppedByIceman) {
+			setVisible(false);
+			currentState = permanent;
+		}
+		else if (droppedByIceman) {
+			setVisible(true);
+			currentState = temporary;
+		}
+	}
+	virtual ~GoldNugget() {}
+	virtual void doSomething() override;
+	
+
+private:
+	enum NuggetState { permanent, temporary, bait }; // bait is when protestor can pick it up
+	NuggetState currentState;
+	int waitTime = 100;
+};
 #endif // ACTOR_H_

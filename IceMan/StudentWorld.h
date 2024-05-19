@@ -49,6 +49,7 @@ public:
 		}
 
 		spawnBoulders(B);
+		spawnGoldNuggets(G);
 		spawnBarrels(numOfBarrels);
 
 		return GWSTATUS_CONTINUE_GAME;
@@ -108,6 +109,8 @@ public:
 
 	void spawnBarrels(int barrelNum);
 	void spawnBoulders(int boulderNum);
+	void spawnGoldNuggets(int nuggetNum);
+	void dropGold(int x, int y);
 	bool validEuclideanDistance(int x1, int y1, int x2, int y2, int minRadius);
 	bool blockedByBoulder(const int& x, const int& y, Actor::Direction direction);
 	void setDisplayText();

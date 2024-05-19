@@ -18,7 +18,11 @@ void Iceman::doSomething() {
 		case KEY_PRESS_ESCAPE:
 			setDead();
 			break;
-
+		case KEY_PRESS_TAB:
+			if (m_goldNuggets) {
+				getWorld()->dropGold(getX(), getY());
+			}
+			break;
 		case KEY_PRESS_RIGHT:
 			if (getDirection() == right && getX() == 60) { // iceman is at right border
 				moveTo(getX(), getY());
@@ -153,5 +157,34 @@ void Barrel::doSomething() {
 		getWorld()->increaseScore(1000);
 		getWorld()->getPlayer()->foundBarrel();
 	}
-	
+}
+
+void GoldNugget::doSomething() {
+	if (!isAlive()) {
+		return;
+	}
+
+	int iceManX = getWorld()->getPlayer()->getX();
+	int iceManY = getWorld()->getPlayer()->getY();
+
+	// iceman 4 units away
+	if (!isVisible() && !getWorld()->validEuclideanDistance(iceManX, iceManY, getX(), getY(), 5)) {
+		setVisible(true);
+		return;
+	}
+
+	// 3 units away and permanent state
+	if (currentState == permanent && !getWorld()->validEuclideanDistance(iceManX, iceManY, getX(), getY(), 4)) {
+		setDead();
+		getWorld()->playSound(SOUND_GOT_GOODIE);
+		getWorld()->increaseScore(10);
+		getWorld()->getPlayer()->foundGoldNugget();
+	}
+
+	if (currentState == temporary) {
+		if (waitTime == 0) {
+			setDead();
+		}
+		waitTime--;
+	}
 }
