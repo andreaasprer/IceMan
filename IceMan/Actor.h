@@ -57,6 +57,7 @@ public:
 	int getGoldCount() const { return m_goldNuggets; }
 	int getSonarCount() const { return m_sonar; }
 	int getBarrelCount() const { return m_barrels; }
+	void foundBarrel() { m_barrels++; }
 private:
 	int m_waterLevel = 5;
 	int m_sonar = 1;
@@ -89,5 +90,13 @@ private:
 	bool hitsCharacter(StudentWorld* sw);
 };
 
+class Barrel : public Actor {
+public:
+	Barrel(StudentWorld* sw, int x, int y) : Actor(IID_BARREL, x, y, sw, right, 1.0, 2) {
+		setVisible(false);
+	}
+	virtual ~Barrel() {}
+	virtual void doSomething() override;
+};
 
 #endif // ACTOR_H_

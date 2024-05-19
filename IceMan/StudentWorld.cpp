@@ -83,7 +83,7 @@ void StudentWorld::spawnBoulders(int boulderNum) {
 		int y = 20 + (rand() % 37); // 20 - 56
 
 
-		if (x > 26 && x < 34 && y > 3) { // check if in mine shaft
+		if (x > 26 && x < 34 && y > 1) { // check if will be in mine shaft
 			canPlace = false;
 		}
 		else {
@@ -100,6 +100,38 @@ void StudentWorld::spawnBoulders(int boulderNum) {
 			actorList.push_back(new Boulder(this, x, y));
 			clearIce(x, y);
 			currentNum++;
+		}
+
+		canPlace = true;
+	}
+}
+
+
+void StudentWorld::spawnBarrels(int barrelNum) {
+	int currentNum = 0;
+	bool canPlace = true;
+
+	while (currentNum < barrelNum) {
+		int x = rand() % 61; // 0 - 60
+		int y = rand() % 57; // 0 - 56
+
+		if (x > 26 && x < 34 && y > 1) {
+			canPlace = false;
+		}
+		else {
+			// go through actor list and check if distance of boulder not too close to other actors
+			for (Actor* actor : actorList) {
+				if (!validEuclideanDistance(x, y, actor->getX(), actor->getY(), 6)) {
+					canPlace = false;
+					break;
+				}
+			}
+		}
+
+		if (canPlace) {
+			actorList.push_back(new Barrel(this, x, y));
+			currentNum++;
+			cout << "Barrel X: " << x << " Barrel Y: " << y << endl;
 		}
 
 		canPlace = true;

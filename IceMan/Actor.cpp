@@ -131,3 +131,27 @@ bool Boulder::hitsCharacter(StudentWorld* sw) {
 	}
 	return false;
 }
+
+void Barrel::doSomething() {
+	if (!isAlive()) {
+		return;
+	}
+
+	int iceManX = getWorld()->getPlayer()->getX();
+	int iceManY = getWorld()->getPlayer()->getY();
+
+	// iceman 4 units away
+	if (!isVisible() && !getWorld()->validEuclideanDistance(iceManX, iceManY, getX(), getY(), 5)) {
+		setVisible(true);
+		return;
+	}
+
+	// 3 units away
+	if (!getWorld()->validEuclideanDistance(iceManX, iceManY, getX(), getY(), 4)) {
+		setDead();
+		getWorld()->playSound(SOUND_FOUND_OIL);
+		getWorld()->increaseScore(1000);
+		getWorld()->getPlayer()->foundBarrel();
+	}
+	
+}
