@@ -11,7 +11,6 @@
 #include<cstdlib>
 #include <iomanip>
 #include <sstream>
-
 using namespace std;
 
 
@@ -32,7 +31,6 @@ public:
 		int B = min(currentLevel / 2 + 2, 9); // number of boulders in each level
 		int G = max(5 - currentLevel / 2, 2); // number of gold in each level
 		numOfBarrels = min(2 + currentLevel, 21);    // number of oil barrels in each level
-
 
 		// initialize iceman
 		m_iceman = new Iceman(this, 10);
@@ -58,6 +56,8 @@ public:
 	virtual int move()
 	{
 		setDisplayText();
+
+		spawnSonarOrWater(getLevel());
 
 		m_iceman->doSomething();
 		/*cout << "X: " << m_iceman->getX() << endl;
@@ -110,6 +110,7 @@ public:
 	void spawnBarrels(int barrelNum);
 	void spawnBoulders(int boulderNum);
 	void spawnGoldNuggets(int nuggetNum);
+	void spawnSonarOrWater(int level);
 	void dropGold(int x, int y);
 	bool validEuclideanDistance(int x1, int y1, int x2, int y2, int minRadius);
 	bool blockedByBoulder(const int& x, const int& y, Actor::Direction direction);
@@ -120,7 +121,8 @@ private:
 	Iceman* m_iceman;
 	Ice* m_iceField[64][64];
 	list<Actor*> actorList;
-	int numOfBarrels;
+	int numOfBarrels = 0;
+	int sonarWaterChance = 0;
 };
 
 #endif // STUDENTWORLD_H_

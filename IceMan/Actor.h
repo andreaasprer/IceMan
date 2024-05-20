@@ -2,6 +2,7 @@
 #define ACTOR_H_
 
 #include "GraphObject.h"
+#include <algorithm>
 class StudentWorld;
 
 // abstract base class for all of game's actors
@@ -46,6 +47,22 @@ private:
 	int m_hitPoints = 0;
 };
 
+// base class for Sonar Kit and Water Pool
+class TemporaryGoodies : public Actor {
+public:
+	TemporaryGoodies(int imageID, int startX, int startY, StudentWorld* sw, int lifetime, Direction dir = right, double size = 1.0, unsigned int depth = 2)
+		: Actor(imageID, startX, startY, sw, dir, size, depth) {
+		setVisible(true);
+		setTickLifetime(lifetime);
+	}
+	virtual ~TemporaryGoodies() {};
+
+	int getTickLifetime() const { return tickLifetime; }
+	void tickDecrement() { tickLifetime--; }
+private:
+	int tickLifetime;
+	void setTickLifetime(int lifetime) { tickLifetime = lifetime; }
+};
 
 class Iceman : public Character {
 public:
@@ -60,6 +77,8 @@ public:
 	void foundBarrel() { m_barrels++; }
 	void foundGoldNugget() { m_goldNuggets++; }
 	void droppedGoldNugget() { m_goldNuggets--; }
+	void foundSonar() { m_sonar++; }
+	void foundWaterPool() { m_waterLevel += 5; }
 private:
 	int m_waterLevel = 5;
 	int m_sonar = 1;
@@ -73,7 +92,6 @@ public:
 	Ice(StudentWorld* sw, int x, int y) : Actor(IID_ICE, x, y, sw, right, 0.25, 3) { setVisible(true); };
 	virtual ~Ice() {}
 	virtual void doSomething() override {};
-
 };
 
 class Boulder : public Actor {
@@ -122,4 +140,21 @@ private:
 	NuggetState currentState;
 	int waitTime = 100;
 };
+
+class Sonar : public TemporaryGoodies {
+public:
+	Sonar(StudentWorld* sw, int lifetime) : TemporaryGoodies(IID_SONAR, 0, 60, sw, lifetime, right, 1.0, 2) {}
+	virtual ~Sonar() {};
+	virtual void doSomething() override;
+};
+
+class WaterPool : public TemporaryGoodies {
+public:
+	WaterPool(StudentWorld* sw, int x, int y, int lifetime) : TemporaryGoodies(IID_WATER_POOL, x, y, sw, lifetime, right, 1.0, 2) {}
+	virtual ~WaterPool() {}
+	virtual void doSomething() override;
+};
+
+
+
 #endif // ACTOR_H_

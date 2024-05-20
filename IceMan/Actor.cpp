@@ -188,3 +188,53 @@ void GoldNugget::doSomething() {
 		waitTime--;
 	}
 }
+
+
+void Sonar::doSomething() {
+	if (!isAlive()) {
+		return;
+	}
+
+	int iceManX = getWorld()->getPlayer()->getX();
+	int iceManY = getWorld()->getPlayer()->getY();
+
+	// 3 units away
+	if (!getWorld()->validEuclideanDistance(iceManX, iceManY, getX(), getY(), 4)) {
+		setDead();
+		getWorld()->playSound(SOUND_GOT_GOODIE);
+		getWorld()->getPlayer()->foundSonar();
+		getWorld()->increaseScore(75);
+	}
+
+	// tick lifetime has elapsed
+	if (getTickLifetime() == 0) {
+		setDead();
+	}
+
+	// decrement the lifetime every tick the sonar is alive
+	tickDecrement(); 
+}
+
+void WaterPool::doSomething() {
+	if (!isAlive()) {
+		return;
+	}
+
+	int iceManX = getWorld()->getPlayer()->getX();
+	int iceManY = getWorld()->getPlayer()->getY();
+
+	// 3 units away
+	if (!getWorld()->validEuclideanDistance(iceManX, iceManY, getX(), getY(), 4)) {
+		setDead();
+		getWorld()->playSound(SOUND_GOT_GOODIE);
+		getWorld()->getPlayer()->foundWaterPool();
+		getWorld()->increaseScore(100);
+	}
+
+	// tick lifetime has elapsed
+	if (getTickLifetime() == 0) {
+		setDead();
+	}
+
+	tickDecrement();
+}

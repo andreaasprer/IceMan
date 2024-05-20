@@ -213,3 +213,48 @@ void StudentWorld::dropGold(int x, int y) {
 	actorList.push_back(new GoldNugget(this, x, y, true));
 	m_iceman->droppedGoldNugget();
 }
+
+
+void StudentWorld::spawnSonarOrWater(int level) {
+	int G = level * 25 + 300;
+	int toBeAddedProb = 1 + (rand() % G);
+	int lifetime = max(100, 300 - 10 * level);
+
+	// 1 in G chance that a new Water Pool or Sonar Kit should be added
+	if (toBeAddedProb == 1) {
+		int outOfFive = 1 + (rand() % 5);
+
+		// 1/5 chance for sonar kit
+		if (outOfFive == 1) {
+			actorList.push_back(new Sonar(this, lifetime));
+		}
+
+		// 4/5 chance for water pool
+		else {
+			bool addedWater = false;
+			while (!addedWater) {
+				bool clearBox = true;
+
+				// randomize coordinates
+				int x = rand() % 61;
+				int y = rand() % 57;
+
+				// check if there is ice in the 4x4 box
+				for (int i = 0; i < 4; i++) {
+					for (int j = 0; j < 4; j++) {
+						if ((y + j) < 60) {
+							if (m_iceField[x + i][y + j] != nullptr) {
+								clearBox = false;
+							}
+						}
+					}
+				}
+
+				if (clearBox) {
+					actorList.push_back(new WaterPool(this, x, y, lifetime));
+					addedWater = true;
+				}
+			}
+		}
+	}
+}
