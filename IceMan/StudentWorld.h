@@ -37,10 +37,14 @@ public:
 
 		// set up the ice field
 		for (int x = 0; x < 64; x++) {
-			for (int y = 0; y < 60; y++) {
+			for (int y = 0; y < 64; y++) {
 				if (x >= 30 && x < 34 && y > 3) { // dont put ice for starting middle tunnel
 					m_iceField[x][y] = nullptr;
 				}
+				else if (y > 59) {				  // so the squirt gun can spray at that top level	
+					m_iceField[x][y] = nullptr;
+				}
+
 				else
 					m_iceField[x][y] = new Ice(this, x, y);
 			}
@@ -49,6 +53,8 @@ public:
 		spawnBoulders(B);
 		spawnGoldNuggets(G);
 		spawnBarrels(numOfBarrels);
+
+		actorList.push_back(new Protester(this, 5));
 
 		return GWSTATUS_CONTINUE_GAME;
 	}
@@ -60,8 +66,8 @@ public:
 		spawnSonarOrWater(getLevel());
 
 		m_iceman->doSomething();
-		/*cout << "X: " << m_iceman->getX() << endl;
-		cout << "Y: " << m_iceman->getY() << endl;*/
+		cout << "X: " << m_iceman->getX() << endl;
+		cout << "Y: " << m_iceman->getY() << endl;
 
 		for (Actor* actor : actorList) {
 			if (actor->isAlive()) {
@@ -101,21 +107,19 @@ public:
 		actorList.clear();
 	}
 
-	void removeDeadGameObjects();
+
 	void clearIce(int x, int y);
 	Ice* getIce(int x, int y) const { return m_iceField[x][y]; }
 	list<Actor*> getActorList() const { return actorList; }
 	Iceman* getPlayer() const { return m_iceman; }
-
-	void spawnBarrels(int barrelNum);
-	void spawnBoulders(int boulderNum);
-	void spawnGoldNuggets(int nuggetNum);
-	void spawnSonarOrWater(int level);
+	void useSquirt(int x, int y, Actor::Direction direction);
 	void dropGold(int x, int y);
-	bool validEuclideanDistance(int x1, int y1, int x2, int y2, int minRadius);
-	bool blockedByBoulder(const int& x, const int& y, Actor::Direction direction);
-	void setDisplayText();
-	string formatString(int level, int lives, int health, int squirts, int gold, int barrelsLeft, int sonar, int score);
+	void SonarAbility(int x, int y);
+	bool outsideEuclideanDistance(int x1, int y1, int x2, int y2, int Radius);
+	bool withinEuclideanDistance(int x1, int y1, int x2, int y2, int radius);
+	bool blockedByBoulder(const int x, const int y, Actor::Direction direction);
+	bool canMoveTo(const int x, const int y, Actor::Direction direction);
+
 
 private:
 	Iceman* m_iceman;
@@ -123,6 +127,15 @@ private:
 	list<Actor*> actorList;
 	int numOfBarrels = 0;
 	int sonarWaterChance = 0;
+
+	void setDisplayText();
+	string formatString(int level, int lives, int health, int squirts, int gold, int barrelsLeft, int sonar, int score);
+	void removeDeadGameObjects();
+	void spawnBarrels(int barrelNum);
+	void spawnBoulders(int boulderNum);
+	void spawnGoldNuggets(int nuggetNum);
+	void spawnSonarOrWater(int level);
+	bool inTunnel(int x, int y);
 };
 
 #endif // STUDENTWORLD_H_

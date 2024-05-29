@@ -1,5 +1,4 @@
 #include "StudentWorld.h"
-
 using namespace std;
 
 GameWorld* createStudentWorld(string assetDir)
@@ -72,6 +71,12 @@ void StudentWorld::clearIce(int x, int y) {
 	}
 }
 
+bool StudentWorld::inTunnel(int x, int y) {
+	if (x > 26 && x < 34 && y > 1) {
+		return true;
+	}
+	return false;
+}
 
 void StudentWorld::spawnBoulders(int boulderNum) {
 	int currentNum = 0;
@@ -83,13 +88,13 @@ void StudentWorld::spawnBoulders(int boulderNum) {
 		int y = 20 + (rand() % 37); // 20 - 56
 
 
-		if (x > 26 && x < 34 && y > 1) { // check if will be in mine shaft
+		if (inTunnel(x, y)) { // check if will be in mine shaft
 			canPlace = false;
 		}
 		else {
 			// go through actor list and check if distance of boulder not too close to other actors
 			for (Actor* actor : actorList) {
-				if (!validEuclideanDistance(x, y, actor->getX(), actor->getY(), 6)) {
+				if (!outsideEuclideanDistance(x, y, actor->getX(), actor->getY(), 6)) {
 					canPlace = false;
 					break;
 				}
@@ -115,13 +120,13 @@ void StudentWorld::spawnBarrels(int barrelNum) {
 		int x = rand() % 61; // 0 - 60
 		int y = rand() % 57; // 0 - 56
 
-		if (x > 26 && x < 34 && y > 1) {
+		if (inTunnel(x, y)) {
 			canPlace = false;
 		}
 		else {
 			// go through actor list and check if distance of barrel not too close to other actors
 			for (Actor* actor : actorList) {
-				if (!validEuclideanDistance(x, y, actor->getX(), actor->getY(), 6)) {
+				if (!outsideEuclideanDistance(x, y, actor->getX(), actor->getY(), 6)) {
 					canPlace = false;
 					break;
 				}
@@ -131,7 +136,6 @@ void StudentWorld::spawnBarrels(int barrelNum) {
 		if (canPlace) {
 			actorList.push_back(new Barrel(this, x, y));
 			currentNum++;
-			cout << "Barrel X: " << x << " Barrel Y: " << y << endl;
 		}
 
 		canPlace = true;
@@ -146,13 +150,13 @@ void StudentWorld::spawnGoldNuggets(int nuggetNum) {
 		int x = rand() % 61; // 0 - 60
 		int y = rand() % 57; // 0 - 56
 
-		if (x > 26 && x < 34 && y > 1) {
+		if (inTunnel(x, y)) {
 			canPlace = false;
 		}
 		else {
 			// go through actor list and check if distance of gold not too close to other actors
 			for (Actor* actor : actorList) {
-				if (!validEuclideanDistance(x, y, actor->getX(), actor->getY(), 6)) {
+				if (!outsideEuclideanDistance(x, y, actor->getX(), actor->getY(), 6)) {
 					canPlace = false;
 					break;
 				}
@@ -162,21 +166,27 @@ void StudentWorld::spawnGoldNuggets(int nuggetNum) {
 		if (canPlace) {
 			actorList.push_back(new GoldNugget(this, x, y, false));
 			currentNum++;
-			cout << "Gold X: " << x << " Gold Y: " << y << endl;
 		}
 
 		canPlace = true;
 	}
 }
 
-
-bool StudentWorld::validEuclideanDistance(int x1, int y1, int x2, int y2, int minRadius) {
+// used for spacing objects
+bool StudentWorld::outsideEuclideanDistance(int x1, int y1, int x2, int y2, int radius) {
 	int distance = sqrt(pow(x1 - x2, 2) + pow(y1 - y2, 2));
-	if (distance < minRadius) { return false; }
+	if (distance < radius) { return false; }
 	return true;
 }
 
-bool StudentWorld::blockedByBoulder(const int& x, const int& y, Actor::Direction direction) {
+// used to see if things are within specified radius
+bool StudentWorld::withinEuclideanDistance(int x1, int y1, int x2, int y2, int radius) {
+	int distance = sqrt(pow(x1 - x2, 2) + pow(y1 - y2, 2));
+	if (distance <= radius) { return true; }
+	return false;
+}
+
+bool StudentWorld::blockedByBoulder(const int x, const int y, Actor::Direction direction) {
 	// go through actorList and find the boulders
 	for (auto actor : actorList) {
 		if (actor->getBlockAbility() == true) {
@@ -208,10 +218,60 @@ bool StudentWorld::blockedByBoulder(const int& x, const int& y, Actor::Direction
 	return false;
 }
 
+bool StudentWorld::canMoveTo(const int x, const int y, Actor::Direction direction) {
+	// check if boulder on the way
+	if (blockedByBoulder(x, y, direction)) {
+		return false;
+	}
+
+	// check ice depending on direction
+	switch (direction) {
+	case Actor::right:
+		for (int i = 0; i < 4; i++) {
+			if (m_iceField[x + 4][y + i] != nullptr) {
+				return false;
+			}
+		}
+		break;
+	case Actor::left:
+		for (int i = 0; i < 4; i++) {
+			if (m_iceField[x][y + i] != nullptr) {
+				return false;
+			}
+		}
+		break;
+	case Actor::up:
+		for (int i = 0; i < 4; i++) {
+			if (m_iceField[x + i][y + 4] != nullptr) {
+				return false;
+			}
+		}
+		break;
+	case Actor::down:
+		for (int i = 0; i < 4; i++) {
+			if (m_iceField[x + i][y - 1] != nullptr) {
+				return false;
+			}
+		}
+		break;
+	}
+
+	return true;
+}
+
+
+void StudentWorld::useSquirt(int x, int y, Actor::Direction direction) {
+	actorList.push_back(new Squirt(this, x, y, direction));
+	m_iceman->sprayedSquirt();
+	playSound(SOUND_PLAYER_SQUIRT);
+}
+
+
 
 void StudentWorld::dropGold(int x, int y) {
 	actorList.push_back(new GoldNugget(this, x, y, true));
 	m_iceman->droppedGoldNugget();
+	playSound(SOUND_SONAR);
 }
 
 
@@ -255,6 +315,14 @@ void StudentWorld::spawnSonarOrWater(int level) {
 					addedWater = true;
 				}
 			}
+		}
+	}
+}
+
+void StudentWorld::SonarAbility(int x, int y) {
+	for (Actor* actor : actorList) {
+		if (withinEuclideanDistance(x, y, actor->getX(), actor->getY(), 12)) {
+			actor->setVisible(true);
 		}
 	}
 }

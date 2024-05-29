@@ -18,11 +18,38 @@ void Iceman::doSomething() {
 		case KEY_PRESS_ESCAPE:
 			setDead();
 			break;
+
 		case KEY_PRESS_TAB:
 			if (m_goldNuggets) {
 				getWorld()->dropGold(getX(), getY());
 			}
 			break;
+
+		case 'Z':
+		case 'z':
+			if (getSonarCount()) {
+				usedSonar();
+				getWorld()->SonarAbility(getX(), getY());
+			}
+			break;
+
+		case KEY_PRESS_SPACE:
+			if (m_waterLevel) {
+				if (getDirection() == right && getX() < 60) {
+					getWorld()->useSquirt(getX() + 3, getY(), right);
+				}
+				else if (getDirection() == left && getX() > 0) {
+					getWorld()->useSquirt(getX() - 3, getY(), getDirection());
+				}
+				else if (getDirection() == up && getY() < 60) {
+					getWorld()->useSquirt(getX(), getY() + 3, getDirection());
+				}
+				else if (getDirection() == down && getY() > 0) {
+					getWorld()->useSquirt(getX(), getY() - 3, getDirection());
+				}
+			}
+			break;
+
 		case KEY_PRESS_RIGHT:
 			if (getDirection() == right && getX() == 60) { // iceman is at right border
 				moveTo(getX(), getY());
@@ -35,6 +62,7 @@ void Iceman::doSomething() {
 				setDirection(right);
 			}
 			break;
+
 		case KEY_PRESS_LEFT:
 			if (getDirection() == left && getX() == 0) { // iceman is at left border
 				moveTo(getX(), getY());
@@ -47,6 +75,7 @@ void Iceman::doSomething() {
 				setDirection(left);
 			}
 			break;
+
 		case KEY_PRESS_UP:
 			if (getDirection() == up && getY() == 60) { // iceman is at top border
 				moveTo(getX(), getY());
@@ -59,6 +88,7 @@ void Iceman::doSomething() {
 				setDirection(up);
 			}
 			break;
+
 		case KEY_PRESS_DOWN:
 			if (getDirection() == down && getY() == 0) { // iceman is at bottom border
 				moveTo(getX(), getY());
@@ -145,13 +175,13 @@ void Barrel::doSomething() {
 	int iceManY = getWorld()->getPlayer()->getY();
 
 	// iceman 4 units away
-	if (!isVisible() && !getWorld()->validEuclideanDistance(iceManX, iceManY, getX(), getY(), 5)) {
+	if (!isVisible() && getWorld()->withinEuclideanDistance(iceManX, iceManY, getX(), getY(), 4)) {
 		setVisible(true);
 		return;
 	}
 
 	// 3 units away
-	if (!getWorld()->validEuclideanDistance(iceManX, iceManY, getX(), getY(), 4)) {
+	if (getWorld()->withinEuclideanDistance(iceManX, iceManY, getX(), getY(), 3)) {
 		setDead();
 		getWorld()->playSound(SOUND_FOUND_OIL);
 		getWorld()->increaseScore(1000);
@@ -168,13 +198,13 @@ void GoldNugget::doSomething() {
 	int iceManY = getWorld()->getPlayer()->getY();
 
 	// iceman 4 units away
-	if (!isVisible() && !getWorld()->validEuclideanDistance(iceManX, iceManY, getX(), getY(), 5)) {
+	if (!isVisible() && getWorld()->withinEuclideanDistance(iceManX, iceManY, getX(), getY(), 4)) {
 		setVisible(true);
 		return;
 	}
 
 	// 3 units away and permanent state
-	if (currentState == permanent && !getWorld()->validEuclideanDistance(iceManX, iceManY, getX(), getY(), 4)) {
+	if (currentState == permanent && getWorld()->withinEuclideanDistance(iceManX, iceManY, getX(), getY(), 3)) {
 		setDead();
 		getWorld()->playSound(SOUND_GOT_GOODIE);
 		getWorld()->increaseScore(10);
@@ -199,7 +229,7 @@ void Sonar::doSomething() {
 	int iceManY = getWorld()->getPlayer()->getY();
 
 	// 3 units away
-	if (!getWorld()->validEuclideanDistance(iceManX, iceManY, getX(), getY(), 4)) {
+	if (getWorld()->withinEuclideanDistance(iceManX, iceManY, getX(), getY(), 3)) {
 		setDead();
 		getWorld()->playSound(SOUND_GOT_GOODIE);
 		getWorld()->getPlayer()->foundSonar();
@@ -212,7 +242,7 @@ void Sonar::doSomething() {
 	}
 
 	// decrement the lifetime every tick the sonar is alive
-	tickDecrement(); 
+	tickDecrement();
 }
 
 void WaterPool::doSomething() {
@@ -224,7 +254,7 @@ void WaterPool::doSomething() {
 	int iceManY = getWorld()->getPlayer()->getY();
 
 	// 3 units away
-	if (!getWorld()->validEuclideanDistance(iceManX, iceManY, getX(), getY(), 4)) {
+	if (getWorld()->withinEuclideanDistance(iceManX, iceManY, getX(), getY(), 3)) {
 		setDead();
 		getWorld()->playSound(SOUND_GOT_GOODIE);
 		getWorld()->getPlayer()->foundWaterPool();
@@ -237,4 +267,48 @@ void WaterPool::doSomething() {
 	}
 
 	tickDecrement();
+}
+
+
+void Squirt::doSomething() {
+	if (!isAlive()) {
+		return;
+	}
+
+	// ADD LATER: WHEN IT HIT PROTESTORS
+
+	// traveled all 4 squares
+	if (travelDistance == 0) {
+		setDead();
+	}
+
+	if (travelDistance > 0) {
+		switch (getDirection()) {
+		case right:
+			if (!getWorld()->canMoveTo(getX(), getY(), right)) {
+				setDead();
+			}
+			moveTo(getX() + 1, getY());
+			break;
+		case left:
+			if (!getWorld()->canMoveTo(getX(), getY(), left)) {
+				setDead();
+			}
+			moveTo(getX() - 1, getY());
+			break;
+		case up:
+			if (!getWorld()->canMoveTo(getX(), getY(), up)) {
+				setDead();
+			}
+			moveTo(getX(), getY() + 1);
+			break;
+		case down:
+			if (!getWorld()->canMoveTo(getX(), getY(), down)) {
+				setDead();
+			}
+			moveTo(getX(), getY() - 1);
+			break;
+		}
+		travelDistance--;
+	}
 }

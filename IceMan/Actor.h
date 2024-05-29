@@ -12,7 +12,7 @@ public:
 		: GraphObject(imageID, startX, startY, dir, size, depth) {
 		m_studentWorld = sw;
 		m_alive = true;
-	};
+	}
 	virtual ~Actor() {}
 	virtual void doSomething() = 0;
 
@@ -74,11 +74,13 @@ public:
 	int getGoldCount() const { return m_goldNuggets; }
 	int getSonarCount() const { return m_sonar; }
 	int getBarrelCount() const { return m_barrels; }
+	void sprayedSquirt() { m_waterLevel--; }
 	void foundBarrel() { m_barrels++; }
 	void foundGoldNugget() { m_goldNuggets++; }
 	void droppedGoldNugget() { m_goldNuggets--; }
 	void foundSonar() { m_sonar++; }
 	void foundWaterPool() { m_waterLevel += 5; }
+	void usedSonar() { m_sonar--; }
 private:
 	int m_waterLevel = 5;
 	int m_sonar = 1;
@@ -87,9 +89,19 @@ private:
 };
 
 
+
+class Protester : public Character {
+public:
+	Protester(StudentWorld* sw, int health) : Character(IID_PROTESTER, 60, 60, sw, health, left, 1.0, 0) {
+		setVisible(true);
+	}
+	virtual ~Protester() {}
+	virtual void doSomething() override {}
+};
+
 class Ice : public Actor {
 public:
-	Ice(StudentWorld* sw, int x, int y) : Actor(IID_ICE, x, y, sw, right, 0.25, 3) { setVisible(true); };
+	Ice(StudentWorld* sw, int x, int y) : Actor(IID_ICE, x, y, sw, right, 0.25, 3) { setVisible(true); }
 	virtual ~Ice() {}
 	virtual void doSomething() override {};
 };
@@ -100,7 +112,7 @@ public:
 		setVisible(true);
 		setBlockAbility(true);
 		currentState = stable;
-	};
+	}
 	virtual ~Boulder() {}
 	virtual void doSomething() override;
 private:
@@ -109,6 +121,19 @@ private:
 	int waitTime = 30;
 	bool hitsCharacter(StudentWorld* sw);
 };
+
+class Squirt : public Actor {
+public:
+	Squirt(StudentWorld* sw, int x, int y, Direction dir) : Actor(IID_WATER_SPURT, x, y, sw, dir, 1.0, 1) {
+		setVisible(true);
+	}
+	virtual ~Squirt() {}
+	virtual void doSomething() override;
+
+private:
+	int travelDistance = 8;
+};
+
 
 class Barrel : public Actor {
 public:
@@ -133,7 +158,7 @@ public:
 	}
 	virtual ~GoldNugget() {}
 	virtual void doSomething() override;
-	
+
 
 private:
 	enum NuggetState { permanent, temporary, bait }; // bait is when protestor can pick it up
@@ -154,7 +179,5 @@ public:
 	virtual ~WaterPool() {}
 	virtual void doSomething() override;
 };
-
-
 
 #endif // ACTOR_H_
