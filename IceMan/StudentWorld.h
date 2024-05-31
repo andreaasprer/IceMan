@@ -32,8 +32,10 @@ public:
 		int G = max(5 - currentLevel / 2, 2); // number of gold in each level
 		numOfBarrels = min(2 + currentLevel, 21);    // number of oil barrels in each level
 
+		int tickToWaitBetweenMoves = max(0, 3 - currentLevel / 4);
+
 		// initialize iceman
-		m_iceman = new Iceman(this, 10);
+		m_iceman = new Iceman(this);
 
 		// set up the ice field
 		for (int x = 0; x < 64; x++) {
@@ -54,7 +56,7 @@ public:
 		spawnGoldNuggets(G);
 		spawnBarrels(numOfBarrels);
 
-		actorList.push_back(new Protester(this, 5));
+		actorList.push_back(new Protester(this, tickToWaitBetweenMoves));
 
 		return GWSTATUS_CONTINUE_GAME;
 	}
@@ -119,6 +121,7 @@ public:
 	bool withinEuclideanDistance(int x1, int y1, int x2, int y2, int radius);
 	bool blockedByBoulder(const int x, const int y, Actor::Direction direction);
 	bool canMoveTo(const int x, const int y, Actor::Direction direction);
+	bool isFacingIceMan(const int x, const int y, Actor::Direction direction);
 
 
 private:

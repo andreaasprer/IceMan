@@ -32,16 +32,17 @@ private:
 // base class for Iceman and NPCs (protestors)
 class Character : public Actor {
 public:
-	Character(int imageID, int startX, int startY, StudentWorld* sw, int hitPoints, Direction dir = right, double size = 1.0, unsigned int depth = 0)
+	Character(int imageID, int startX, int startY, StudentWorld* sw, Direction dir = right, double size = 1.0, unsigned int depth = 0)
 		: Actor(imageID, startX, startY, sw, dir, size, depth) {
 		setVisible(true);
-		m_hitPoints = hitPoints;
 	}
 	virtual ~Character() {}
+	virtual bool annoy(unsigned int amt) = 0;
 
 
-	void setHitPoints(int health) { m_hitPoints = health; }
+	void setHitPoints(int hitPoints) { m_hitPoints = hitPoints; }
 	int getHitPoints() const { return m_hitPoints; }
+	void decrementHitPoints(unsigned int amt) { m_hitPoints -= amt; }
 
 private:
 	int m_hitPoints = 0;
@@ -66,9 +67,13 @@ private:
 
 class Iceman : public Character {
 public:
-	Iceman(StudentWorld* sw, int health) : Character(IID_PLAYER, 30, 60, sw, health, right, 1.0, 0) {};
+	Iceman(StudentWorld* sw) : Character(IID_PLAYER, 30, 60, sw, right, 1.0, 0) {
+		setVisible(true);
+		setHitPoints(10);
+	};
 	virtual ~Iceman() {}
 	virtual void doSomething() override;
+	virtual bool annoy(unsigned int amt) override;
 
 	int getSquirtsLeft() const { return m_waterLevel; }
 	int getGoldCount() const { return m_goldNuggets; }
@@ -92,11 +97,22 @@ private:
 
 class Protester : public Character {
 public:
-	Protester(StudentWorld* sw, int health) : Character(IID_PROTESTER, 60, 60, sw, health, left, 1.0, 0) {
+	Protester(StudentWorld* sw, int tickWait) : Character(IID_PROTESTER, 60, 60, sw, left, 1.0, 0) {
 		setVisible(true);
+		setHitPoints(5);
+		waitTime = tickWait;
 	}
 	virtual ~Protester() {}
-	virtual void doSomething() override {}
+	virtual void doSomething() override;
+	virtual bool annoy(unsigned int amt) override { return true; }
+
+private:
+	int numSquaresToMoveInCurrentDirection = 0;
+	bool leaveTheOilFieldState = false;
+	int waitTime = 0;
+	int yellWaitTime = 0;
+
+	void resetYell() { yellWaitTime = 15; }
 };
 
 class Ice : public Actor {

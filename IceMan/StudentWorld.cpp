@@ -326,3 +326,33 @@ void StudentWorld::SonarAbility(int x, int y) {
 		}
 	}
 }
+
+bool StudentWorld::isFacingIceMan(const int x, const int y, Actor::Direction direction) {
+	int iceManX = m_iceman->getX();
+	int iceManY = m_iceman->getY();
+	// iceman to protester's right. Should be facing right
+	if (iceManX > x && Actor::Direction::right == direction
+		&& iceManY >= y - 4 && iceManY <= y + 4) {
+		return true;
+	}
+
+	// left
+	if (iceManX < x && Actor::Direction::left == direction
+		&& iceManY >= y - 4 && iceManY <= y + 4) {
+		return true;
+	}
+
+	// up
+	if (iceManY > y && Actor::Direction::up == direction
+		&& iceManX >= x - 4 && iceManX <= x + 4) {
+		return true;
+	}
+
+	if (iceManY < y && Actor::Direction::down == direction
+		&& iceManX >= x - 4 && iceManX <= x + 41) {
+		return true;
+	}
+	else {
+		return false;
+	}
+}

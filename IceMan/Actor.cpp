@@ -105,6 +105,13 @@ void Iceman::doSomething() {
 	}
 }
 
+bool Iceman::annoy(unsigned int amt) {
+	decrementHitPoints(amt);
+	// iceman dead
+	if (getHitPoints() <= 0) { return true; } // true to indicate iceman dies
+	return false; // false to indicate iceman still alive
+}
+
 
 void Boulder::doSomething() {
 	if (!isAlive()) {
@@ -311,4 +318,40 @@ void Squirt::doSomething() {
 		}
 		travelDistance--;
 	}
+}
+
+
+
+void Protester::doSomething() {
+	int iceManX = getWorld()->getPlayer()->getX();
+	int iceManY = getWorld()->getPlayer()->getY();
+
+	if (!isAlive()) {
+		return;
+	}
+
+	if (waitTime > 0) { // in rest state
+		waitTime--;
+		return;
+	}
+
+	if (yellWaitTime > 0) { // decrement yell wait time 
+		yellWaitTime--;
+	}
+
+	if (getWorld()->withinEuclideanDistance(getX(), getY(), iceManX, iceManY, 4) && getWorld()->isFacingIceMan(getX(), getY(), getDirection())) {
+		if (yellWaitTime == 0) {
+			if (getWorld()->getPlayer()->annoy(2)) { // iceman died
+				getWorld()->getPlayer()->setDead();
+				getWorld()->playSound(SOUND_PLAYER_GIVE_UP);
+			}
+			getWorld()->playSound(SOUND_PROTESTER_YELL);
+			resetYell();
+			return;
+		}
+	}
+
+	
+
+
 }
