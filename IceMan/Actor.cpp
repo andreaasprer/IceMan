@@ -35,16 +35,16 @@ void Iceman::doSomething() {
 
 		case KEY_PRESS_SPACE:
 			if (m_waterLevel) {
-				if (getDirection() == right && getX() < 60) {
+				if (getDirection() == right && getX() <= 60) {
 					getWorld()->useSquirt(getX() + 3, getY(), right);
 				}
-				else if (getDirection() == left && getX() > 0) {
+				else if (getDirection() == left && getX() >= 0) {
 					getWorld()->useSquirt(getX() - 3, getY(), getDirection());
 				}
-				else if (getDirection() == up && getY() < 60) {
+				else if (getDirection() == up && getY() <= 60) {
 					getWorld()->useSquirt(getX(), getY() + 3, getDirection());
 				}
-				else if (getDirection() == down && getY() > 0) {
+				else if (getDirection() == down && getY() >= 0) {
 					getWorld()->useSquirt(getX(), getY() - 3, getDirection());
 				}
 			}

@@ -68,8 +68,6 @@ public:
 		spawnSonarOrWater(getLevel());
 
 		m_iceman->doSomething();
-		cout << "X: " << m_iceman->getX() << endl;
-		cout << "Y: " << m_iceman->getY() << endl;
 
 		for (Actor* actor : actorList) {
 			if (actor->isAlive()) {
@@ -122,7 +120,7 @@ public:
 	bool blockedByBoulder(const int x, const int y, Actor::Direction direction);
 	bool canMoveTo(const int x, const int y, Actor::Direction direction);
 	bool isFacingIceMan(const int x, const int y, Actor::Direction direction);
-
+	bool boulderCheck(int x, int y);
 
 private:
 	Iceman* m_iceman;

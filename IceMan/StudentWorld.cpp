@@ -218,39 +218,59 @@ bool StudentWorld::blockedByBoulder(const int x, const int y, Actor::Direction d
 	return false;
 }
 
+bool StudentWorld::boulderCheck(int x, int y) { // to check if boulder is there
+	for (Actor* actor : actorList) {
+		if (actor->getBlockAbility() == true) {
+			if (withinEuclideanDistance(x + 2, y + 2, actor->getX() + 2, actor->getY() + 2, 3)) { // within radius of 3
+				return true;
+			}
+		}
+	}
+	return false;
+}
+
+
 bool StudentWorld::canMoveTo(const int x, const int y, Actor::Direction direction) {
 	// check if boulder on the way
-	if (blockedByBoulder(x, y, direction)) {
+	if (boulderCheck(x, y)) {
 		return false;
 	}
 
-	// check ice depending on direction
+	// bounds checking and check if ice overlaps squirt object
 	switch (direction) {
 	case Actor::right:
-		for (int i = 0; i < 4; i++) {
-			if (m_iceField[x + 4][y + i] != nullptr) {
-				return false;
-			}
+		for (int i = 0; i <= 4; i++) {
+			for (int j = 0; j < 4; j++) {
+				if (m_iceField[x + i][y + j] != nullptr || x + i >= 64) {
+					return false;
+				}
+			} 
 		}
 		break;
 	case Actor::left:
 		for (int i = 0; i < 4; i++) {
-			if (m_iceField[x][y + i] != nullptr) {
-				return false;
+			for (int j = 0; j < 4; j++) {
+				if (m_iceField[x + i - 1][y + j] != nullptr || x - 1 < 0) {
+					return false;
+				}
 			}
 		}
 		break;
 	case Actor::up:
 		for (int i = 0; i < 4; i++) {
-			if (m_iceField[x + i][y + 4] != nullptr) {
-				return false;
+			for (int j = 0; j <= 4; j++) {
+				if (m_iceField[x + i][y + j] != nullptr || y + j >= 64) {
+					return false;
+				}
 			}
 		}
 		break;
 	case Actor::down:
 		for (int i = 0; i < 4; i++) {
-			if (m_iceField[x + i][y - 1] != nullptr) {
-				return false;
+			for (int j = 0; j <= 4; j++) {
+				if (m_iceField[x + i][y + j - 1] != nullptr || y - 1 < 0) {
+					return false;
+				}
 			}
 		}
 		break;
@@ -337,22 +357,24 @@ bool StudentWorld::isFacingIceMan(const int x, const int y, Actor::Direction dir
 	}
 
 	// left
-	if (iceManX < x && Actor::Direction::left == direction
+	else if (iceManX < x && Actor::Direction::left == direction
 		&& iceManY >= y - 4 && iceManY <= y + 4) {
 		return true;
 	}
 
 	// up
-	if (iceManY > y && Actor::Direction::up == direction
+	else if (iceManY > y && Actor::Direction::up == direction
 		&& iceManX >= x - 4 && iceManX <= x + 4) {
 		return true;
 	}
 
-	if (iceManY < y && Actor::Direction::down == direction
+	// down
+	else if (iceManY < y && Actor::Direction::down == direction
 		&& iceManX >= x - 4 && iceManX <= x + 41) {
 		return true;
 	}
-	else {
-		return false;
-	}
+
+	return false;
 }
+
+

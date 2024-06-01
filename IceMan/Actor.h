@@ -87,7 +87,7 @@ public:
 	void foundWaterPool() { m_waterLevel += 5; }
 	void usedSonar() { m_sonar--; }
 private:
-	int m_waterLevel = 5;
+	int m_waterLevel = 50;
 	int m_sonar = 1;
 	int m_goldNuggets = 0;
 	int m_barrels = 0;
