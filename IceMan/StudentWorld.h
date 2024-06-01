@@ -120,7 +120,12 @@ public:
 	bool blockedByBoulder(const int x, const int y, Actor::Direction direction);
 	bool canMoveTo(const int x, const int y, Actor::Direction direction);
 	bool isFacingIceMan(const int x, const int y, Actor::Direction direction);
-	bool boulderCheck(int x, int y);
+	bool boulderCheck(const int x, const int y);
+
+	bool isNearIceMan(Actor* a, int radius);
+
+	bool lineOfSightToIceMan(Actor* a, GraphObject::Direction& dirToPlayer);
+	
 
 private:
 	Iceman* m_iceman;

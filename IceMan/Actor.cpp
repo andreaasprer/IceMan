@@ -339,7 +339,8 @@ void Protester::doSomething() {
 		yellWaitTime--;
 	}
 
-	if (getWorld()->withinEuclideanDistance(getX(), getY(), iceManX, iceManY, 4) && getWorld()->isFacingIceMan(getX(), getY(), getDirection())) {
+	// is at yelling distance and facing iceman
+	if (getWorld()->isNearIceMan(this, 4) && getWorld()->isFacingIceMan(getX(), getY(), getDirection())) {
 		if (yellWaitTime == 0) {
 			if (getWorld()->getPlayer()->annoy(2)) { // iceman died
 				getWorld()->getPlayer()->setDead();
@@ -350,8 +351,28 @@ void Protester::doSomething() {
 			return;
 		}
 	}
+	resetWait();
 
+	// move to iceman if in direct line of sight with no obstructions
+	Direction dirToPlayer = none;
+	if (getWorld()->lineOfSightToIceMan(this, dirToPlayer)) {
+		setDirection(dirToPlayer);
+		switch (getDirection()) {
+		case up:
+			moveTo(getX(), getY() + 1);
+			break;
+		case down:
+			moveTo(getX(), getY() - 1);
+			break;
+		case right:
+			moveTo(getX() + 1, getY());
+			break;
+		case left:
+			moveTo(getX() - 1, getY());
+			break;
+		}
+		numSquaresToMoveInCurrentDirection = 0;
+		return;
+	}
 	
-
-
 }

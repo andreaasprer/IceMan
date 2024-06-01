@@ -87,7 +87,7 @@ public:
 	void foundWaterPool() { m_waterLevel += 5; }
 	void usedSonar() { m_sonar--; }
 private:
-	int m_waterLevel = 50;
+	int m_waterLevel = 5;
 	int m_sonar = 1;
 	int m_goldNuggets = 0;
 	int m_barrels = 0;
@@ -100,6 +100,7 @@ public:
 	Protester(StudentWorld* sw, int tickWait) : Character(IID_PROTESTER, 60, 60, sw, left, 1.0, 0) {
 		setVisible(true);
 		setHitPoints(5);
+		ticksToWait = tickWait;
 		waitTime = tickWait;
 	}
 	virtual ~Protester() {}
@@ -110,8 +111,9 @@ private:
 	int numSquaresToMoveInCurrentDirection = 0;
 	bool leaveTheOilFieldState = false;
 	int waitTime = 0;
+	int ticksToWait = 0;
 	int yellWaitTime = 0;
-
+	void resetWait() { waitTime = ticksToWait; }
 	void resetYell() { yellWaitTime = 15; }
 };
 

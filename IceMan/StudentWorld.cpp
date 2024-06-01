@@ -186,6 +186,14 @@ bool StudentWorld::withinEuclideanDistance(int x1, int y1, int x2, int y2, int r
 	return false;
 }
 
+
+bool StudentWorld::isNearIceMan(Actor* a, int radius) {
+	if (withinEuclideanDistance(a->getX(), a->getY(), getPlayer()->getX(), getPlayer()->getY(), radius)) {
+		return true;
+	}
+	return false;
+}
+
 bool StudentWorld::blockedByBoulder(const int x, const int y, Actor::Direction direction) {
 	// go through actorList and find the boulders
 	for (auto actor : actorList) {
@@ -218,7 +226,7 @@ bool StudentWorld::blockedByBoulder(const int x, const int y, Actor::Direction d
 	return false;
 }
 
-bool StudentWorld::boulderCheck(int x, int y) { // to check if boulder is there
+bool StudentWorld::boulderCheck(const int x, const int y) { // to check if boulder is there
 	for (Actor* actor : actorList) {
 		if (actor->getBlockAbility() == true) {
 			if (withinEuclideanDistance(x + 2, y + 2, actor->getX() + 2, actor->getY() + 2, 3)) { // within radius of 3
@@ -275,7 +283,6 @@ bool StudentWorld::canMoveTo(const int x, const int y, Actor::Direction directio
 		}
 		break;
 	}
-
 	return true;
 }
 
@@ -377,4 +384,70 @@ bool StudentWorld::isFacingIceMan(const int x, const int y, Actor::Direction dir
 	return false;
 }
 
+bool StudentWorld::lineOfSightToIceMan(Actor* a, GraphObject::Direction& dirToPlayer) {
+	int iceManX = m_iceman->getX();
+	int iceManY = m_iceman->getY();
+	int actX = a->getX();
+	int actY = a->getY();
+
+	bool clearLine = true;
+
+	// check vertical line of sight
+	if (iceManX == actX) {
+		if (iceManY > actY) { // iceman above
+			for (int i = actY + 1; i < iceManY; i++) {
+				if (!canMoveTo(actX, i, GraphObject::Direction::up)) {
+					clearLine = false;
+					return false;
+				}
+				if (clearLine) {
+					dirToPlayer = GraphObject::Direction::up;
+					return true;
+				}
+			}
+		}
+		else if (iceManY < actY) { // iceman below
+			for (int i = actY - 1; i > iceManY; i--) {
+				if (!canMoveTo(actX, i, GraphObject::Direction::down)) {
+					clearLine = false;
+					return false;
+				}
+				if (clearLine) {
+					dirToPlayer = GraphObject::Direction::down;
+					return true;
+				}
+			}
+		}
+	}
+
+	// check horizontal line of sight
+	if (iceManY == actY) {
+		if (iceManX > actX) { // iceman to the right
+			for (int i = actX + 1; i < iceManX; i++) {
+				if (!canMoveTo(i, actY, GraphObject::Direction::right)) {
+					clearLine = false;
+					return false;
+				}
+				if (clearLine) {
+					dirToPlayer = GraphObject::Direction::right;
+					return true;
+				}
+			}
+		}
+		else if (iceManX < actX) { // iceman to the left
+			for (int i = actX - 1; i > iceManX; i--) {
+				if (!canMoveTo(i, actY, GraphObject::Direction::left)) {
+					clearLine = false;
+					return false;
+				}
+				if (clearLine) {
+					dirToPlayer = GraphObject::Direction::left;
+					return true;
+				}
+			}
+		}
+	}
+
+	return false;
+}
 
