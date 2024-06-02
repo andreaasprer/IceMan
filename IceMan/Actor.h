@@ -22,11 +22,14 @@ public:
 	void setDead() { m_alive = false; }
 	void setBlockAbility(bool flag) { m_blockAbility = flag; }
 	bool getBlockAbility() const { return m_blockAbility; }
+	bool getIfProt() { return isProtester; }
+	void setIfProt(bool val) { isProtester = val; }
 
 private:
 	StudentWorld* m_studentWorld;
 	bool m_alive;
 	bool m_blockAbility = false; // only actor that can block is boulder
+	bool isProtester = false;
 };
 
 // base class for Iceman and NPCs (protestors)
@@ -43,6 +46,7 @@ public:
 	void setHitPoints(int hitPoints) { m_hitPoints = hitPoints; }
 	int getHitPoints() const { return m_hitPoints; }
 	void decrementHitPoints(unsigned int amt) { m_hitPoints -= amt; }
+	void takeStep(const int x, const int y, Direction dir);
 
 private:
 	int m_hitPoints = 0;
@@ -87,7 +91,7 @@ public:
 	void foundWaterPool() { m_waterLevel += 5; }
 	void usedSonar() { m_sonar--; }
 private:
-	int m_waterLevel = 5;
+	int m_waterLevel = 50;
 	int m_sonar = 1;
 	int m_goldNuggets = 0;
 	int m_barrels = 0;
@@ -100,12 +104,15 @@ public:
 	Protester(StudentWorld* sw, int tickWait) : Character(IID_PROTESTER, 60, 60, sw, left, 1.0, 0) {
 		setVisible(true);
 		setHitPoints(5);
+		setIfProt(true);
 		ticksToWait = tickWait;
 		waitTime = tickWait;
 	}
 	virtual ~Protester() {}
 	virtual void doSomething() override;
 	virtual bool annoy(unsigned int amt) override { return true; }
+	bool getAnnoyedState() { return leaveTheOilFieldState; }
+	void setAnnoyed() { leaveTheOilFieldState = true; }
 
 private:
 	int numSquaresToMoveInCurrentDirection = 0;
@@ -113,8 +120,13 @@ private:
 	int waitTime = 0;
 	int ticksToWait = 0;
 	int yellWaitTime = 0;
+	int turnWaitTime = 200;
 	void resetWait() { waitTime = ticksToWait; }
 	void resetYell() { yellWaitTime = 15; }
+	void resetTurn() { turnWaitTime = 200; }
+	bool canSideTurn(const int x, const int y, Direction direction);
+	void randomizeMoveNum() { numSquaresToMoveInCurrentDirection = 8 + (rand() % 53); }
+	GraphObject::Direction randomizeDirection();
 };
 
 class Ice : public Actor {
@@ -137,7 +149,8 @@ private:
 	enum BoulderState { stable, waiting, falling };
 	BoulderState currentState;
 	int waitTime = 30;
-	bool hitsCharacter(StudentWorld* sw);
+	
+	void hitsCharacter(StudentWorld* sw);
 };
 
 class Squirt : public Actor {

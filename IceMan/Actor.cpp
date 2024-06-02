@@ -24,7 +24,6 @@ void Iceman::doSomething() {
 				getWorld()->dropGold(getX(), getY());
 			}
 			break;
-
 		case 'Z':
 		case 'z':
 			if (getSonarCount()) {
@@ -157,20 +156,35 @@ void Boulder::doSomething() {
 				}
 			}
 		}
-		if (hitsCharacter(getWorld())) {
-			getWorld()->getPlayer()->setDead();
-			getWorld()->playSound(SOUND_PLAYER_GIVE_UP);
-		}
+
+		hitsCharacter(getWorld());
 
 		moveTo(getX(), getY() - 1);
 	}
 }
 
-bool Boulder::hitsCharacter(StudentWorld* sw) {
+void Boulder::hitsCharacter(StudentWorld* sw) {
+	// hits iceman
 	if (abs(getX() - sw->getPlayer()->getX()) < 4 && getY() == sw->getPlayer()->getY() + 4) {
-		return true;
+		sw->getPlayer()->decrementHitPoints(100);
+		sw->getPlayer()->setDead();
+		sw->playSound(SOUND_PLAYER_GIVE_UP);
 	}
-	return false;
+
+	// hits protester
+	for (Actor* actor : sw->getActorList()) {
+		if (actor->getIfProt()) { // only protesters
+			// downcast to protester only to be able to see if it isn't leaving the oil field
+			Protester* p = dynamic_cast<Protester*>(actor);
+			if (p->getAnnoyedState() == false) {
+				if (abs(getX() - p->getX()) < 4 && getY() == p->getY() + 4) {
+					p->setAnnoyed();
+					sw->playSound(SOUND_PLAYER_GIVE_UP);
+					sw->increaseScore(500);
+				}
+			}
+		}
+	}
 }
 
 void Barrel::doSomething() {
@@ -339,6 +353,15 @@ void Protester::doSomething() {
 		yellWaitTime--;
 	}
 
+	turnWaitTime--;
+	resetWait();
+
+	if (leaveTheOilFieldState) {
+		getWorld()->increaseScore(100);
+		cout << "im going home" << endl;
+		leaveTheOilFieldState = false;
+	}
+
 	// is at yelling distance and facing iceman
 	if (getWorld()->isNearIceMan(this, 4) && getWorld()->isFacingIceMan(getX(), getY(), getDirection())) {
 		if (yellWaitTime == 0) {
@@ -351,28 +374,118 @@ void Protester::doSomething() {
 			return;
 		}
 	}
-	resetWait();
-
+	
 	// move to iceman if in direct line of sight with no obstructions
 	Direction dirToPlayer = none;
 	if (getWorld()->lineOfSightToIceMan(this, dirToPlayer)) {
 		setDirection(dirToPlayer);
-		switch (getDirection()) {
-		case up:
-			moveTo(getX(), getY() + 1);
-			break;
-		case down:
-			moveTo(getX(), getY() - 1);
-			break;
-		case right:
-			moveTo(getX() + 1, getY());
-			break;
-		case left:
-			moveTo(getX() - 1, getY());
-			break;
-		}
+		takeStep(getX(), getY(), getDirection());
 		numSquaresToMoveInCurrentDirection = 0;
 		return;
 	}
 	
+
+	// generate new direction when move distance is at zero
+	if (numSquaresToMoveInCurrentDirection <= 0) {
+		// generate a random direction from up, down, right, left (avoid none)
+		Direction randDir = randomizeDirection();
+
+		// check if it can go that direction:
+		while (!getWorld()->canMoveTo(getX(), getY(), randDir)) {
+			randDir = randomizeDirection();
+		}
+
+		// update protester's direction and distance value
+		setDirection(randDir);
+		randomizeMoveNum();
+	}
+
+	// try to make a turn
+	if (turnWaitTime <= 0 && canSideTurn(getX(), getY(), getDirection())) {
+		switch (getDirection()) {
+		case up:
+		case down:
+			if (getWorld()->canMoveTo(getX(), getY(), right) && getWorld()->canMoveTo(getX(), getY(), left)) { // can turn to both
+				// randomize using enum values (left = 3 and right = 4)
+				Direction dir = static_cast<Direction>(3 + (rand() % 2));
+				setDirection(dir);
+			}
+			else if (getWorld()->canMoveTo(getX(), getY(), right)) {
+				setDirection(right);
+			}
+			else {
+				setDirection(left);
+			}
+			break;
+		case right:
+		case left:
+			if (getWorld()->canMoveTo(getX(), getY(), up) && getWorld()->canMoveTo(getX(), getY(), down)) { // can turn to both
+				// randomize using enum values (up = 1 and down = 2)
+				Direction dir = static_cast<Direction>(1 + (rand() % 2));
+				
+			}
+			else if (getWorld()->canMoveTo(getX(), getY(), up)) {
+				setDirection(up);
+			}
+			else {
+				setDirection(down);
+			}
+			break;
+		}
+		randomizeMoveNum();
+		resetTurn();
+	}
+
+	// try to take a step
+	if (getWorld()->canMoveTo(getX(), getY(), getDirection())) {
+		takeStep(getX(), getY(), getDirection());
+		numSquaresToMoveInCurrentDirection--;
+	}
+
+	// reset distance so it will force to get a new direction
+	else if (!getWorld()->canMoveTo(getX(), getY(), getDirection())) {
+		numSquaresToMoveInCurrentDirection = 0;
+	}
+}
+
+
+GraphObject::Direction Protester::randomizeDirection() {
+	// generate a random direction from up, down, right, left (avoid none)
+	Direction random = static_cast<Direction>(1 + (rand() % right));
+	return random;
+}
+
+void Character::takeStep(const int x, const int y, Direction dir) {
+	switch (dir) {
+	case up:
+		moveTo(getX(), getY() + 1);
+		break;
+	case down:
+		moveTo(getX(), getY() - 1);
+		break;
+	case right:
+		moveTo(getX() + 1, getY());
+		break;
+	case left:
+		moveTo(getX() - 1, getY());
+		break;
+	}
+}
+
+bool Protester::canSideTurn(const int x, const int y, Direction direction) {
+	// perpendicular turns: 
+	// if looking up or down -> can turn right  left
+	// right or left -> up or down
+
+	if (direction == right || direction == left) {
+		if (getWorld()->canMoveTo(x, y, up) || getWorld()->canMoveTo(x, y, down)) {
+			return true;
+		}
+	}
+	else if (direction == up || direction == down) {
+		if (getWorld()->canMoveTo(x, y, right) || getWorld()->canMoveTo(x, y, left)) {
+			return true;
+		}
+	}
+	return false;
 }

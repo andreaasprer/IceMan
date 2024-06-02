@@ -198,39 +198,31 @@ bool StudentWorld::blockedByBoulder(const int x, const int y, Actor::Direction d
 	// go through actorList and find the boulders
 	for (auto actor : actorList) {
 		if (actor->getBlockAbility() == true) {
-			// for now, won't depend it on radius of boulder. Will just do a box around boulder.
+			int boulderX = actor->getX();
+			int boulderY = actor->getY();
+
+			// for now, won't depend it on radius of boulder. Will just do a box around and within boulder.
 			switch (direction) {
 			case Actor::right:
-				if (x + 4 == actor->getX() && abs(y - actor->getY()) < 4) {
+				if (x + 4 >= boulderX && x < boulderX + 4 && abs(y - boulderY) < 4) {
 					return true;
 				}
 				break;
 			case Actor::left:
-				if (x == actor->getX() + 4 && abs(y - actor->getY()) < 4) {
+				if (x <= boulderX + 4 && x > boulderX && abs(y - boulderY) < 4) {
 					return true;
 				}
 				break;
 			case Actor::up:
-				if (y + 4 == actor->getY() && abs(x - actor->getX()) < 4) {
+				if (y + 4 >= boulderY && y < boulderY + 4 && abs(x - boulderX) < 4) {
 					return true;
 				}
 				break;
 			case Actor::down:
-				if (y == actor->getY() + 4 && abs(x - actor->getX()) < 4) {
+				if (y <= boulderY + 4 && y > boulderY && abs(x - boulderX) < 4) {
 					return true;
 				}
 				break;
-			}
-		}
-	}
-	return false;
-}
-
-bool StudentWorld::boulderCheck(const int x, const int y) { // to check if boulder is there
-	for (Actor* actor : actorList) {
-		if (actor->getBlockAbility() == true) {
-			if (withinEuclideanDistance(x + 2, y + 2, actor->getX() + 2, actor->getY() + 2, 3)) { // within radius of 3
-				return true;
 			}
 		}
 	}
@@ -240,7 +232,7 @@ bool StudentWorld::boulderCheck(const int x, const int y) { // to check if bould
 
 bool StudentWorld::canMoveTo(const int x, const int y, Actor::Direction direction) {
 	// check if boulder on the way
-	if (boulderCheck(x, y)) {
+	if (blockedByBoulder(x, y, direction)) {
 		return false;
 	}
 
@@ -298,7 +290,6 @@ void StudentWorld::useSquirt(int x, int y, Actor::Direction direction) {
 void StudentWorld::dropGold(int x, int y) {
 	actorList.push_back(new GoldNugget(this, x, y, true));
 	m_iceman->droppedGoldNugget();
-	playSound(SOUND_SONAR);
 }
 
 
