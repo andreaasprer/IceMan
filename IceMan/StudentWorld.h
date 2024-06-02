@@ -11,6 +11,7 @@
 #include<cstdlib>
 #include <iomanip>
 #include <sstream>
+#include <queue>
 using namespace std;
 
 
@@ -120,17 +121,17 @@ public:
 	bool blockedByBoulder(const int x, const int y, Actor::Direction direction);
 	bool canMoveTo(const int x, const int y, Actor::Direction direction);
 	bool isFacingIceMan(const int x, const int y, Actor::Direction direction);
-	bool boulderCheck(const int x, const int y);
 
 	bool isNearIceMan(Actor* a, int radius);
 
 	bool lineOfSightToIceMan(Actor* a, GraphObject::Direction& dirToPlayer);
-	
-
+	void findShortestPath(int startX, int startY, int endX, int endY);
+	GraphObject::Direction dirToShortestPath(int startX, int startY, int endX, int endY);
 private:
 	Iceman* m_iceman;
 	Ice* m_iceField[64][64];
 	list<Actor*> actorList;
+	int shortestPath[64][64];
 	int numOfBarrels = 0;
 	int sonarWaterChance = 0;
 
@@ -142,6 +143,14 @@ private:
 	void spawnGoldNuggets(int nuggetNum);
 	void spawnSonarOrWater(int level);
 	bool inTunnel(int x, int y);
+	
+
+	// for bfs algorithm
+	struct Vertex {
+		Vertex(int x, int y) : m_x(x), m_y(y) { };
+		int m_x;
+		int m_y;
+	};
 };
 
 #endif // STUDENTWORLD_H_

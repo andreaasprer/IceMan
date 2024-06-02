@@ -442,3 +442,88 @@ bool StudentWorld::lineOfSightToIceMan(Actor* a, GraphObject::Direction& dirToPl
 	return false;
 }
 
+
+void StudentWorld::findShortestPath(int startX, int startY, int endX, int endY) {
+	queue<Vertex> path;
+	int curSteps;
+
+	// initialize grid with -1, marks as univisited
+	for (int i = 0; i < 64; i++) {
+		for (int j = 0; j < 64; j++) {
+			shortestPath[i][j] = -1;
+		}
+	}
+
+	// initialize starting position
+	path.push(Vertex(startX, startY));
+	shortestPath[startX][startY] = 0;
+
+	while (!path.empty()) {
+		// store guess coordinate
+		int x = path.front().m_x;
+		int y = path.front().m_y;
+		path.pop();
+
+		if (x == endX && y == endY) { // found destination
+			return;
+		}
+
+		curSteps = shortestPath[x][y] + 1;
+
+		// check right
+		if (shortestPath[x + 1][y] < 0 && canMoveTo(x, y, Actor::Direction::right)) {
+			path.push(Vertex(x + 1, y));
+			shortestPath[x + 1][y] = curSteps;
+		}
+
+		// check left 
+		if (shortestPath[x - 1][y] < 0 && x > 0 && canMoveTo(x, y, Actor::Direction::left)) {
+			path.push(Vertex(x - 1, y));
+			shortestPath[x - 1][y] = curSteps;
+		}
+
+		// check up
+		if (shortestPath[x][y + 1] < 0 && canMoveTo(x, y, Actor::Direction::up)) {
+			path.push(Vertex(x, y + 1));
+			shortestPath[x][y + 1] = curSteps;
+		}
+
+		if (shortestPath[x][y - 1] < 0 && y > 0 && canMoveTo(x, y, Actor::Direction::down)) {
+			path.push(Vertex(x, y - 1));
+			shortestPath[x][y - 1] = curSteps;
+		}
+	}
+}
+
+
+GraphObject::Direction StudentWorld::dirToShortestPath(int startX, int startY, int x, int y) {
+	findShortestPath(startX, startY, x, y);
+	GraphObject::Direction shortestDir = GraphObject::Direction::none;
+
+	// temporary smallest step
+	int shortest = 999999;
+
+	if (shortestPath[x + 1][y] < shortest && shortestPath[x + 1][y] != -1) {
+		shortest = shortestPath[x + 1][y];
+		shortestDir = GraphObject::Direction::right;
+	}
+	else if (shortestPath[x - 1][y] < shortest && shortestPath[x - 1][y] != -1) {
+		shortest = shortestPath[x - 1][y];
+		shortestDir = GraphObject::Direction::left;
+	}
+	else if (shortestPath[x][y + 1] < shortest && shortestPath[x][y + 1] != -1) {
+		shortest = shortestPath[x][y + 1];
+		shortestDir = GraphObject::Direction::up;
+	}
+	else if (shortestPath[x][y - 1] < shortest && shortestPath[x][y - 1] != -1) {
+		shortest = shortestPath[x][y - 1];
+		shortestDir = GraphObject::Direction::down;
+	}
+	else {
+		shortestDir = GraphObject::Direction::none;
+	}
+	cout << "short: " << shortest << endl;
+	return shortestDir;
+}
+
+
