@@ -32,8 +32,8 @@ public:
 		int B = min(currentLevel / 2 + 2, 9); // number of boulders in each level
 		int G = max(5 - currentLevel / 2, 2); // number of gold in each level
 		numOfBarrels = min(2 + currentLevel, 21);    // number of oil barrels in each level
-
-		int tickToWaitBetweenMoves = max(0, 3 - currentLevel / 4);
+		maxNumProts = min(15, int(2 + currentLevel * 1.5)); // number of protesters allowed in each level
+		resetT();
 
 		// initialize iceman
 		m_iceman = new Iceman(this);
@@ -57,16 +57,24 @@ public:
 		spawnGoldNuggets(G);
 		spawnBarrels(numOfBarrels);
 
-		actorList.push_back(new Protester(this, tickToWaitBetweenMoves));
+		actorList.push_back(new Protester(this, currentLevel, IID_PROTESTER, 5));
 
 		return GWSTATUS_CONTINUE_GAME;
 	}
 
 	virtual int move()
 	{
+		T--;
 		setDisplayText();
-
 		spawnSonarOrWater(getLevel());
+
+		
+		if (T <= 0 && canSpawnProtester(maxNumProts)) { // check conditions if we can add protester
+			spawnProtesters(getLevel());
+			resetT();
+		}
+
+		cout << "T" << " " << T << endl;
 
 		m_iceman->doSomething();
 
@@ -121,12 +129,11 @@ public:
 	bool blockedByBoulder(const int x, const int y, Actor::Direction direction);
 	bool canMoveTo(const int x, const int y, Actor::Direction direction);
 	bool isFacingIceMan(const int x, const int y, Actor::Direction direction);
-
 	bool isNearIceMan(Actor* a, int radius);
-
 	bool lineOfSightToIceMan(Actor* a, GraphObject::Direction& dirToPlayer);
-	void findShortestPath(int startX, int startY, int endX, int endY);
+	bool findShortestPath(int startX, int startY, int endX, int endY);
 	GraphObject::Direction dirToShortestPath(int startX, int startY, int endX, int endY);
+
 private:
 	Iceman* m_iceman;
 	Ice* m_iceField[64][64];
@@ -134,14 +141,19 @@ private:
 	int shortestPath[64][64];
 	int numOfBarrels = 0;
 	int sonarWaterChance = 0;
+	int maxNumProts = 0;
+	int T = 0;
 
 	void setDisplayText();
 	string formatString(int level, int lives, int health, int squirts, int gold, int barrelsLeft, int sonar, int score);
+	void resetT() { T = max(25, 200 - int(getLevel())); }
 	void removeDeadGameObjects();
 	void spawnBarrels(int barrelNum);
 	void spawnBoulders(int boulderNum);
 	void spawnGoldNuggets(int nuggetNum);
 	void spawnSonarOrWater(int level);
+	void spawnProtesters(int level);
+	bool canSpawnProtester(int maxNum);
 	bool inTunnel(int x, int y);
 	
 

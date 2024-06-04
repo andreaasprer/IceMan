@@ -100,32 +100,45 @@ private:
 
 class Protester : public Character {
 public:
-	Protester(StudentWorld* sw, int tickWait) : Character(IID_PROTESTER, 60, 60, sw, left, 1.0, 0) {
+	Protester(StudentWorld* sw, int level, int id, int hitPoints) : Character(id, 60, 60, sw, left, 1.0, 0) {
 		setVisible(true);
-		setHitPoints(5);
+		setHitPoints(hitPoints);
 		setIfProt(true);
-		ticksToWait = tickWait;
-		waitTime = tickWait;
+		resetWait(level);
 	}
 	virtual ~Protester() {}
 	virtual void doSomething() override;
 	virtual bool annoy(unsigned int amt) override;
 	bool getAnnoyedState() { return leaveTheOilFieldState; }
 	void setAnnoyed() { leaveTheOilFieldState = true; }
-
-private:
-	int numSquaresToMoveInCurrentDirection = 0;
-	bool leaveTheOilFieldState = false;
-	int waitTime = 0;
-	int ticksToWait = 0;
-	int yellWaitTime = 0;
-	int turnWaitTime = 200;
-	void resetWait() { waitTime = ticksToWait; }
+	void gotBribed() { leaveTheOilFieldState = true; }
+	void resetWait(int level) { waitTime = std::max(0, 3 - level / 4); }
 	void resetYell() { yellWaitTime = 15; }
 	void resetTurn() { turnWaitTime = 200; }
 	bool canSideTurn(const int x, const int y, Direction direction);
 	void randomizeMoveNum() { numSquaresToMoveInCurrentDirection = 8 + (rand() % 53); }
 	GraphObject::Direction randomizeDirection();
+
+protected:
+	int numSquaresToMoveInCurrentDirection = 0;
+	bool leaveTheOilFieldState = false;
+	bool bribed = false;
+	int waitTime = 0;
+	int ticksToWait = 0;
+	int yellWaitTime = 0;
+	int turnWaitTime = 200;
+};
+
+class HardCoreProtester : public Protester {
+public:
+	HardCoreProtester(StudentWorld* sw, int level, int id,  int hitPoints) : Protester(sw, level, id, hitPoints) {
+		setVisible(true);
+		setHitPoints(hitPoints);
+		setIfProt(true);
+	}
+	virtual ~HardCoreProtester() {}
+	virtual void doSomething() override;
+	virtual bool annoy(unsigned int amt) override;
 };
 
 class Ice : public Actor {

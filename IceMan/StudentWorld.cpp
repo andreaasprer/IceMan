@@ -172,6 +172,36 @@ void StudentWorld::spawnGoldNuggets(int nuggetNum) {
 	}
 }
 
+void StudentWorld::spawnProtesters(int level) {
+	int probabilityOfHardcore = min(90, level * 10 + 30);
+	int chance = rand() % 100 + 1; // 1 - 100 chance
+
+
+	if (chance < probabilityOfHardcore) {
+		/*actorList.push_back(new HardCoreProtester(this, 3));*/
+		actorList.push_back(new Protester(this, getLevel(), IID_HARD_CORE_PROTESTER, 20));
+		cout << "hardcoreeee" << endl;
+	}
+	else {
+		actorList.push_back(new Protester(this, getLevel(), IID_PROTESTER, 5));
+	}
+}
+
+bool StudentWorld::canSpawnProtester(int maxNum) {
+	int protsNum = 0;
+	// count how many protesters there currently are
+	for (Actor* actor : actorList) {
+		if (actor->getIfProt() == true) {
+			protsNum++;
+		}
+	}
+
+	if (protsNum < maxNum) {
+		return true;
+	}
+	return false;
+}
+
 // used for spacing objects
 bool StudentWorld::outsideEuclideanDistance(int x1, int y1, int x2, int y2, int radius) {
 	int distance = sqrt(pow(x1 - x2, 2) + pow(y1 - y2, 2));
@@ -443,9 +473,10 @@ bool StudentWorld::lineOfSightToIceMan(Actor* a, GraphObject::Direction& dirToPl
 }
 
 
-void StudentWorld::findShortestPath(int startX, int startY, int endX, int endY) {
+bool StudentWorld::findShortestPath(int startX, int startY, int endX, int endY) {
 	queue<Vertex> path;
 	int curSteps;
+	bool reachedDest = false;
 
 	// initialize grid with -1, marks as univisited
 	for (int i = 0; i < 64; i++) {
@@ -465,7 +496,8 @@ void StudentWorld::findShortestPath(int startX, int startY, int endX, int endY) 
 		path.pop();
 
 		if (x == endX && y == endY) { // found destination
-			return;
+			reachedDest = true;
+			return reachedDest;
 		}
 
 		curSteps = shortestPath[x][y] + 1;
@@ -477,7 +509,7 @@ void StudentWorld::findShortestPath(int startX, int startY, int endX, int endY) 
 		}
 
 		// check left 
-		if (shortestPath[x - 1][y] < 0 && x > 0 && canMoveTo(x, y, Actor::Direction::left)) {
+		if (shortestPath[x - 1][y] < 0 && canMoveTo(x, y, Actor::Direction::left)) {
 			path.push(Vertex(x - 1, y));
 			shortestPath[x - 1][y] = curSteps;
 		}
@@ -488,30 +520,23 @@ void StudentWorld::findShortestPath(int startX, int startY, int endX, int endY) 
 			shortestPath[x][y + 1] = curSteps;
 		}
 
-		if (shortestPath[x][y - 1] < 0 && y > 0 && canMoveTo(x, y, Actor::Direction::down)) {
+		if (shortestPath[x][y - 1] < 0 && canMoveTo(x, y, Actor::Direction::down)) {
 			path.push(Vertex(x, y - 1));
 			shortestPath[x][y - 1] = curSteps;
 		}
 	}
+
+	return false;
 }
 
 
 GraphObject::Direction StudentWorld::dirToShortestPath(int startX, int startY, int x, int y) {
-	findShortestPath(startX, startY, x, y);
 	GraphObject::Direction shortestDir = GraphObject::Direction::none;
 
 	// temporary smallest step
 	int shortest = 999999;
 
-	if (shortestPath[x + 1][y] < shortest && shortestPath[x + 1][y] != -1) {
-		shortest = shortestPath[x + 1][y];
-		shortestDir = GraphObject::Direction::right;
-	}
-	else if (shortestPath[x - 1][y] < shortest && shortestPath[x - 1][y] != -1) {
-		shortest = shortestPath[x - 1][y];
-		shortestDir = GraphObject::Direction::left;
-	}
-	else if (shortestPath[x][y + 1] < shortest && shortestPath[x][y + 1] != -1) {
+	if (shortestPath[x][y + 1] < shortest && shortestPath[x][y + 1] != -1) {
 		shortest = shortestPath[x][y + 1];
 		shortestDir = GraphObject::Direction::up;
 	}
@@ -519,10 +544,17 @@ GraphObject::Direction StudentWorld::dirToShortestPath(int startX, int startY, i
 		shortest = shortestPath[x][y - 1];
 		shortestDir = GraphObject::Direction::down;
 	}
+	else if (shortestPath[x + 1][y] < shortest && shortestPath[x + 1][y] != -1) {
+		shortest = shortestPath[x + 1][y];
+		shortestDir = GraphObject::Direction::right;
+	}
+	else if (shortestPath[x - 1][y] < shortest && shortestPath[x - 1][y] != -1) {
+		shortest = shortestPath[x - 1][y];
+		shortestDir = GraphObject::Direction::left;
+	}
 	else {
 		shortestDir = GraphObject::Direction::none;
 	}
-	cout << "short: " << shortest << endl;
 	return shortestDir;
 }
 
