@@ -74,8 +74,6 @@ public:
 			resetT();
 		}
 
-		cout << "T" << " " << T << endl;
-
 		m_iceman->doSomething();
 
 		for (Actor* actor : actorList) {

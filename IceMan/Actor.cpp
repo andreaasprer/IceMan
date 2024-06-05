@@ -191,12 +191,27 @@ void Boulder::hitsCharacter(StudentWorld* sw) {
 	// hits protester
 	for (Actor* actor : sw->getActorList()) {
 		if (actor->getIfProt()) { // only protesters
-			// downcast to protester only to be able to see if it isn't leaving the oil field
-			Protester* p = dynamic_cast<Protester*>(actor);
-			if (p->getAnnoyedState() == false) {
-				if (abs(getX() - p->getX()) < 4 && getY() == p->getY() + 4) {
-					p->annoy(100);
-					sw->increaseScore(500);
+			if (actor->getID() == IID_PROTESTER) {
+				// downcast to protester only to be able to see if it isn't leaving the oil field
+				if (actor->getID() == IID_PROTESTER) {
+					Protester* p = dynamic_cast<Protester*>(actor);
+					if (p->getAnnoyedState() == false) {
+						if (abs(getX() - p->getX()) < 4 && getY() == p->getY() + 4) {
+							p->annoy(100);
+							sw->increaseScore(500);
+						}
+					}
+				}
+			}
+			else if (actor->getID() == IID_HARD_CORE_PROTESTER) {
+				if (actor->getID() == IID_HARD_CORE_PROTESTER) {
+					HardCoreProtester* hp = dynamic_cast<HardCoreProtester*>(actor);
+					if (hp->getAnnoyedState() == false) {
+						if (abs(getX() - hp->getX()) < 4 && getY() == hp->getY() + 4) {
+							hp->annoy(100);
+							sw->increaseScore(500);
+						}
+					}
 				}
 			}
 		}
@@ -256,12 +271,23 @@ void GoldNugget::doSomething() {
 		// find protesters
 		for (Actor* actor : getWorld()->getActorList()) {
 			if (actor->getIfProt() == true) {
-				if (getWorld()->withinEuclideanDistance(getX(), getY(), actor->getX(), actor->getY(), 3)) {
-					Protester* p = dynamic_cast<Protester*>(actor);
-					setDead();
-					getWorld()->playSound(SOUND_PROTESTER_FOUND_GOLD);
-					p->gotBribed(); // notify protester it got bribed
-					getWorld()->increaseScore(25);
+				if (actor->getID() == IID_PROTESTER) {
+					if (getWorld()->withinEuclideanDistance(getX(), getY(), actor->getX(), actor->getY(), 3)) {
+						Protester* p = dynamic_cast<Protester*>(actor);
+						setDead();
+						getWorld()->playSound(SOUND_PROTESTER_FOUND_GOLD);
+						p->gotBribed(); // notify protester it got bribed
+						getWorld()->increaseScore(25);
+					}
+				}
+				else if (actor->getID() == IID_HARD_CORE_PROTESTER) {
+					if (getWorld()->withinEuclideanDistance(getX(), getY(), actor->getX(), actor->getY(), 3)) {
+						HardCoreProtester* hp = dynamic_cast<HardCoreProtester*>(actor);
+						setDead();
+						getWorld()->playSound(SOUND_PROTESTER_FOUND_GOLD);
+						hp->gotBribed(); // notify protester it got bribed
+						getWorld()->increaseScore(50);
+					}
 				}
 			}
 		}
@@ -557,7 +583,6 @@ bool Protester::annoy(unsigned int amt) {
 void HardCoreProtester::doSomething() {
 	int iceManX = getWorld()->getPlayer()->getX();
 	int iceManY = getWorld()->getPlayer()->getY();
-
 	if (!isAlive()) {
 		return;
 	}
@@ -598,6 +623,16 @@ void HardCoreProtester::doSomething() {
 	}
 
 	else {
+		// if more than 4.0 units away from the iceman
+		//if (!getWorld()->isNearIceMan(this, 4)) {
+		//	int M = 16 + getWorld()->getLevel() * 2;
+		//}
+
+
+
+
+
+
 		// is at yelling distance and facing iceman
 		if (getWorld()->isNearIceMan(this, 4) && getWorld()->isFacingIceMan(getX(), getY(), getDirection())) {
 			if (yellWaitTime == 0) {
@@ -692,7 +727,7 @@ bool HardCoreProtester::annoy(unsigned int amt) {
 	if (getHitPoints() <= 0) {
 		waitTime = 0; // dont stun protester
 		leaveTheOilFieldState = true;
-		getWorld()->increaseScore(100);
+		getWorld()->increaseScore(250);
 		getWorld()->playSound(SOUND_PROTESTER_GIVE_UP);
 		return true;
 	}
@@ -702,4 +737,9 @@ bool HardCoreProtester::annoy(unsigned int amt) {
 		return false;
 	}
 
+}
+
+void HardCoreProtester::gotBribed() {
+	// stun for a bit
+	waitTime = max(50, 100 - int(getWorld()->getLevel() * 10));
 }

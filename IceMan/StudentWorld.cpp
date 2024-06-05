@@ -178,9 +178,7 @@ void StudentWorld::spawnProtesters(int level) {
 
 
 	if (chance < probabilityOfHardcore) {
-		/*actorList.push_back(new HardCoreProtester(this, 3));*/
-		actorList.push_back(new Protester(this, getLevel(), IID_HARD_CORE_PROTESTER, 20));
-		cout << "hardcoreeee" << endl;
+		actorList.push_back(new HardCoreProtester(this, getLevel(), IID_HARD_CORE_PROTESTER, 20));
 	}
 	else {
 		actorList.push_back(new Protester(this, getLevel(), IID_PROTESTER, 5));

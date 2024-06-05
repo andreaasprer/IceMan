@@ -110,8 +110,9 @@ public:
 	virtual void doSomething() override;
 	virtual bool annoy(unsigned int amt) override;
 	bool getAnnoyedState() { return leaveTheOilFieldState; }
+	void setLeaveState(bool val) { leaveTheOilFieldState = val; }
 	void setAnnoyed() { leaveTheOilFieldState = true; }
-	void gotBribed() { leaveTheOilFieldState = true; }
+	virtual void gotBribed() { leaveTheOilFieldState = true; }
 	void resetWait(int level) { waitTime = std::max(0, 3 - level / 4); }
 	void resetYell() { yellWaitTime = 15; }
 	void resetTurn() { turnWaitTime = 200; }
@@ -132,13 +133,12 @@ protected:
 class HardCoreProtester : public Protester {
 public:
 	HardCoreProtester(StudentWorld* sw, int level, int id,  int hitPoints) : Protester(sw, level, id, hitPoints) {
-		setVisible(true);
 		setHitPoints(hitPoints);
-		setIfProt(true);
 	}
 	virtual ~HardCoreProtester() {}
 	virtual void doSomething() override;
 	virtual bool annoy(unsigned int amt) override;
+	virtual void gotBribed() override;
 };
 
 class Ice : public Actor {
