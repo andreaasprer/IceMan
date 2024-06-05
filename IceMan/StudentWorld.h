@@ -57,7 +57,7 @@ public:
 		spawnGoldNuggets(G);
 		spawnBarrels(numOfBarrels);
 
-		actorList.push_back(new Protester(this, currentLevel, IID_PROTESTER, 5));
+		actorList.push_back(new HardCoreProtester(this, currentLevel, IID_HARD_CORE_PROTESTER, 5));
 
 		return GWSTATUS_CONTINUE_GAME;
 	}
@@ -129,8 +129,9 @@ public:
 	bool isFacingIceMan(const int x, const int y, Actor::Direction direction);
 	bool isNearIceMan(Actor* a, int radius);
 	bool lineOfSightToIceMan(Actor* a, GraphObject::Direction& dirToPlayer);
-	bool findShortestPath(int startX, int startY, int endX, int endY);
+	bool findShortestPath(int startX, int startY, int endX, int endY, int& steps);
 	GraphObject::Direction dirToShortestPath(int startX, int startY, int endX, int endY);
+	int getShortestSteps(int startX, int startY, int endX, int endY);
 
 private:
 	Iceman* m_iceman;

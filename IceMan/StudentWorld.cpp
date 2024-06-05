@@ -471,7 +471,7 @@ bool StudentWorld::lineOfSightToIceMan(Actor* a, GraphObject::Direction& dirToPl
 }
 
 
-bool StudentWorld::findShortestPath(int startX, int startY, int endX, int endY) {
+bool StudentWorld::findShortestPath(int startX, int startY, int endX, int endY, int& steps) {
 	queue<Vertex> path;
 	int curSteps;
 	bool reachedDest = false;
@@ -495,6 +495,7 @@ bool StudentWorld::findShortestPath(int startX, int startY, int endX, int endY) 
 
 		if (x == endX && y == endY) { // found destination
 			reachedDest = true;
+			steps = shortestPath[x][y];
 			return reachedDest;
 		}
 
@@ -524,9 +525,20 @@ bool StudentWorld::findShortestPath(int startX, int startY, int endX, int endY) 
 		}
 	}
 
+	steps = -1;
 	return false;
 }
 
+int StudentWorld::getShortestSteps(int startX, int startY, int endX, int endY) {
+	int steps = -1;
+	if (findShortestPath(startX, startY, endX, endY, steps)) {
+		return steps;
+	}
+	else {
+
+	}
+	return steps;
+}
 
 GraphObject::Direction StudentWorld::dirToShortestPath(int startX, int startY, int x, int y) {
 	GraphObject::Direction shortestDir = GraphObject::Direction::none;

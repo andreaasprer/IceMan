@@ -430,8 +430,8 @@ void Protester::doSomething() {
 		if (getX() == 60 && getY() == 60) { // protester reached spawn point
 			setDead();
 		}
-
-		if (getWorld()->findShortestPath(60, 60, getX(), getY())) { // if shortest path found (to avoid jiggling bug)
+		int steps = 0;
+		if (getWorld()->findShortestPath(60, 60, getX(), getY(), steps)) { // if shortest path found (to avoid jiggling bug)
 			Direction dir = getWorld()->dirToShortestPath(60, 60, getX(), getY());
 			cout << dir << endl;
 			setDirection(dir);
@@ -603,8 +603,8 @@ void HardCoreProtester::doSomething() {
 		if (getX() == 60 && getY() == 60) { // protester reached spawn point
 			setDead();
 		}
-
-		if (getWorld()->findShortestPath(60, 60, getX(), getY())) { // if shortest path found (to avoid jiggling bug)
+		int steps;
+		if (getWorld()->findShortestPath(60, 60, getX(), getY(), steps)) { // if shortest path found (to avoid jiggling bug)
 			Direction dir = getWorld()->dirToShortestPath(60, 60, getX(), getY());
 			cout << dir << endl;
 			setDirection(dir);
@@ -624,14 +624,32 @@ void HardCoreProtester::doSomething() {
 
 	else {
 		// if more than 4.0 units away from the iceman
-		//if (!getWorld()->isNearIceMan(this, 4)) {
-		//	int M = 16 + getWorld()->getLevel() * 2;
-		//}
-
-
-
-
-
+		if (!getWorld()->isNearIceMan(this, 4)) {
+			int steps = 0;
+			int M = 16 + getWorld()->getLevel() * 2;
+			cout << "M:" << M << endl;
+			steps = getWorld()->getShortestSteps(iceManX, iceManY, getX(), getY()); // get the shortest steps possible to take
+			cout << steps << endl;
+			if (steps != -1 && steps <= M) {
+				if (getWorld()->findShortestPath(iceManX, iceManY, getX(), getY(), steps)) { // avoid the jiggling bug with this if shortest path can only be found
+					Direction dir = getWorld()->dirToShortestPath(iceManX, iceManY, getX(), getY());
+					setDirection(dir);
+					takeStep(getX(), getY(), dir);
+					return;
+				}
+				else {
+					cout << "cant find" << endl;
+					// handle case where the shortest path cannot be found. Will pick a random direction to move to
+					Direction randDir = randomizeDirection();
+					while (!getWorld()->canMoveTo(getX(), getY(), randDir)) {
+						randDir = randomizeDirection();
+					}
+					setDirection(randDir);
+					takeStep(getX(), getY(), randDir);
+				}
+				return;
+			}
+		}
 
 		// is at yelling distance and facing iceman
 		if (getWorld()->isNearIceMan(this, 4) && getWorld()->isFacingIceMan(getX(), getY(), getDirection())) {
