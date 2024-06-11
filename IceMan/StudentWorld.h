@@ -3,8 +3,8 @@
 
 #include "GameWorld.h"
 #include "GameConstants.h"
-#include <string>
 #include "Actor.h"
+#include <string>
 #include <cmath>
 #include <iostream>
 #include <list>
@@ -33,7 +33,7 @@ public:
 		int G = max(5 - currentLevel / 2, 2); // number of gold in each level
 		numOfBarrels = min(2 + currentLevel, 21);    // number of oil barrels in each level
 		maxNumProts = min(15, int(2 + currentLevel * 1.5)); // number of protesters allowed in each level
-		resetT();
+		resetT(); // to reset wait time to add a protester
 
 		// initialize iceman
 		m_iceman = new Iceman(this);
@@ -47,7 +47,6 @@ public:
 				else if (y > 59) {				  // so the squirt gun can spray at that top level	
 					m_iceField[x][y] = nullptr;
 				}
-
 				else
 					m_iceField[x][y] = new Ice(this, x, y);
 			}
@@ -56,19 +55,17 @@ public:
 		spawnBoulders(B);
 		spawnGoldNuggets(G);
 		spawnBarrels(numOfBarrels);
-
-		actorList.push_back(new HardCoreProtester(this, currentLevel, IID_HARD_CORE_PROTESTER, 5));
+		spawnProtesters(getLevel());
 
 		return GWSTATUS_CONTINUE_GAME;
 	}
 
 	virtual int move()
 	{
-		T--;
+		T--; // update add protestor tick time
 		setDisplayText();
 		spawnSonarOrWater(getLevel());
 
-		
 		if (T <= 0 && canSpawnProtester(maxNumProts)) { // check conditions if we can add protester
 			spawnProtesters(getLevel());
 			resetT();
@@ -82,18 +79,17 @@ public:
 			}
 		}
 
-		removeDeadGameObjects();
+		removeDeadGameObjects(); // clear up actor list
 
 		if (numOfBarrels == m_iceman->getBarrelCount()) { // found all barrels
 			playSound(SOUND_FINISHED_LEVEL);
 			return GWSTATUS_FINISHED_LEVEL;
 		}
 
-		if (m_iceman->isAlive() == false) {
+		if (!m_iceman->isAlive()) { // iceman died
 			decLives();
 			return GWSTATUS_PLAYER_DIED;
 		}
-
 
 		return GWSTATUS_CONTINUE_GAME;
 	}
@@ -114,11 +110,11 @@ public:
 		actorList.clear();
 	}
 
-
-	void clearIce(int x, int y);
 	Ice* getIce(int x, int y) const { return m_iceField[x][y]; }
 	list<Actor*> getActorList() const { return actorList; }
 	Iceman* getPlayer() const { return m_iceman; }
+
+	void clearIce(int x, int y);
 	void useSquirt(int x, int y, Actor::Direction direction);
 	void dropGold(int x, int y);
 	void SonarAbility(int x, int y);
@@ -145,7 +141,6 @@ private:
 
 	void setDisplayText();
 	string formatString(int level, int lives, int health, int squirts, int gold, int barrelsLeft, int sonar, int score);
-	void resetT() { T = max(25, 200 - int(getLevel())); }
 	void removeDeadGameObjects();
 	void spawnBarrels(int barrelNum);
 	void spawnBoulders(int boulderNum);
@@ -154,6 +149,7 @@ private:
 	void spawnProtesters(int level);
 	bool canSpawnProtester(int maxNum);
 	bool inTunnel(int x, int y);
+	void resetT() { T = max(25, 200 - int(getLevel())); }
 	
 
 	// for bfs algorithm

@@ -40,6 +40,7 @@ public:
 		setVisible(true);
 	}
 	virtual ~Character() {}
+	virtual void doSomething() override {};
 	virtual bool annoy(unsigned int amt) = 0;
 
 
@@ -61,6 +62,7 @@ public:
 		setTickLifetime(lifetime);
 	}
 	virtual ~TemporaryGoodies() {};
+	virtual void doSomething() override {};
 
 	int getTickLifetime() const { return tickLifetime; }
 	void tickDecrement() { tickLifetime--; }
@@ -90,6 +92,7 @@ public:
 	void foundSonar() { m_sonar++; }
 	void foundWaterPool() { m_waterLevel += 5; }
 	void usedSonar() { m_sonar--; }
+
 private:
 	int m_waterLevel = 5;
 	int m_sonar = 1;
@@ -109,6 +112,7 @@ public:
 	virtual ~Protester() {}
 	virtual void doSomething() override;
 	virtual bool annoy(unsigned int amt) override;
+
 	bool getAnnoyedState() { return leaveTheOilFieldState; }
 	void setLeaveState(bool val) { leaveTheOilFieldState = val; }
 	void setAnnoyed() { leaveTheOilFieldState = true; }
@@ -157,6 +161,7 @@ public:
 	}
 	virtual ~Boulder() {}
 	virtual void doSomething() override;
+
 private:
 	enum BoulderState { stable, waiting, falling };
 	BoulderState currentState;
@@ -203,10 +208,9 @@ public:
 	virtual ~GoldNugget() {}
 	virtual void doSomething() override;
 
-
 private:
-	enum NuggetState { permanent, temporary, bait }; // bait is when protestor can pick it up
-	NuggetState currentState;
+	enum NuggetState { permanent, temporary };
+	NuggetState currentState = permanent;
 	int waitTime = 100;
 };
 

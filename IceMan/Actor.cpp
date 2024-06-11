@@ -128,7 +128,358 @@ bool Iceman::annoy(unsigned int amt) {
 	return false; // false to indicate iceman still alive
 }
 
+void Protester::doSomething() {
+	int iceManX = getWorld()->getPlayer()->getX();
+	int iceManY = getWorld()->getPlayer()->getY();
 
+	if (!isAlive()) {
+		return;
+	}
+
+	if (waitTime > 0) { // in rest state
+		waitTime--;
+		return;
+	}
+
+	if (yellWaitTime > 0) { // decrement yell wait time 
+		yellWaitTime--;
+	}
+
+	turnWaitTime--;
+	resetWait(getWorld()->getLevel());
+
+	if (leaveTheOilFieldState) {
+		if (getX() == 60 && getY() == 60) { // protester reached spawn point
+			setDead();
+		}
+		int steps = 0;
+		if (getWorld()->findShortestPath(60, 60, getX(), getY(), steps)) { // if shortest path found (to avoid jiggling bug)
+			Direction dir = getWorld()->dirToShortestPath(60, 60, getX(), getY());
+			//cout << dir << endl;
+			setDirection(dir);
+			takeStep(getX(), getY(), dir);
+		}
+		else {
+			// handle case where the shortest path cannot be found. Will pick a random direction to move to
+			Direction randDir = randomizeDirection();
+			while (!getWorld()->canMoveTo(getX(), getY(), randDir)) {
+				randDir = randomizeDirection();
+			}
+			setDirection(randDir);
+			takeStep(getX(), getY(), randDir);
+		}
+		return;
+	}
+
+	else {
+		// is at yelling distance and facing iceman
+		if (getWorld()->isNearIceMan(this, 4) && getWorld()->isFacingIceMan(getX(), getY(), getDirection())) {
+			if (yellWaitTime == 0) {
+				if (getWorld()->getPlayer()->annoy(2)) { // iceman died
+					getWorld()->getPlayer()->setDead();
+					getWorld()->playSound(SOUND_PLAYER_GIVE_UP);
+				}
+				getWorld()->playSound(SOUND_PROTESTER_YELL);
+				resetYell();
+				return;
+			}
+		}
+
+		// move to iceman if in direct line of sight with no obstructions
+		Direction dirToPlayer = none;
+		if (getWorld()->lineOfSightToIceMan(this, dirToPlayer)) {
+			setDirection(dirToPlayer);
+			takeStep(getX(), getY(), getDirection());
+			numSquaresToMoveInCurrentDirection = 0;
+			return;
+		}
+
+
+		// generate new direction when move distance is at zero
+		if (numSquaresToMoveInCurrentDirection <= 0) {
+			// generate a random direction from up, down, right, left (avoid none)
+			Direction randDir = randomizeDirection();
+
+			// check if it can go that direction:
+			while (!getWorld()->canMoveTo(getX(), getY(), randDir)) {
+				randDir = randomizeDirection();
+			}
+
+			// update protester's direction and distance value
+			setDirection(randDir);
+			randomizeMoveNum();
+		}
+
+		// try to make a turn
+		if (turnWaitTime <= 0 && canSideTurn(getX(), getY(), getDirection())) {
+			switch (getDirection()) {
+			case up:
+			case down:
+				if (getWorld()->canMoveTo(getX(), getY(), right) && getWorld()->canMoveTo(getX(), getY(), left)) { // can turn to both
+					// randomize using enum values (left = 3 and right = 4)
+					Direction dir = static_cast<Direction>(3 + (rand() % 2));
+					setDirection(dir);
+				}
+				else if (getWorld()->canMoveTo(getX(), getY(), right)) {
+					setDirection(right);
+				}
+				else {
+					setDirection(left);
+				}
+				break;
+			case right:
+			case left:
+				if (getWorld()->canMoveTo(getX(), getY(), up) && getWorld()->canMoveTo(getX(), getY(), down)) { // can turn to both
+					// randomize using enum values (up = 1 and down = 2)
+					Direction dir = static_cast<Direction>(1 + (rand() % 2));
+
+				}
+				else if (getWorld()->canMoveTo(getX(), getY(), up)) {
+					setDirection(up);
+				}
+				else {
+					setDirection(down);
+				}
+				break;
+			}
+			randomizeMoveNum();
+			resetTurn();
+		}
+
+		// try to take a step
+		if (getWorld()->canMoveTo(getX(), getY(), getDirection())) {
+			takeStep(getX(), getY(), getDirection());
+			numSquaresToMoveInCurrentDirection--;
+		}
+
+		// reset distance so it will force to get a new direction
+		else if (!getWorld()->canMoveTo(getX(), getY(), getDirection())) {
+			numSquaresToMoveInCurrentDirection = 0;
+		}
+	}
+}
+
+GraphObject::Direction Protester::randomizeDirection() {
+	// generate a random direction from up, down, right, left (avoid none)
+	Direction random = static_cast<Direction>(1 + (rand() % right));
+	return random;
+}
+
+bool Protester::canSideTurn(const int x, const int y, Direction direction) {
+	// perpendicular turns: 
+	// if looking up or down -> can turn right  left
+	// right or left -> up or down
+	if (direction == right || direction == left) {
+		if (getWorld()->canMoveTo(x, y, up) || getWorld()->canMoveTo(x, y, down)) {
+			return true;
+		}
+	}
+	else if (direction == up || direction == down) {
+		if (getWorld()->canMoveTo(x, y, right) || getWorld()->canMoveTo(x, y, left)) {
+			return true;
+		}
+	}
+	return false;
+}
+
+bool Protester::annoy(unsigned int amt) {
+	decrementHitPoints(amt);
+
+	if (getHitPoints() <= 0) {
+		waitTime = 0; // dont stun protester
+		leaveTheOilFieldState = true;
+		getWorld()->increaseScore(100);
+		getWorld()->playSound(SOUND_PROTESTER_GIVE_UP);
+		return true;
+	}
+	else {
+		// stun protester
+		waitTime = max(50, 100 - int(getWorld()->getLevel() * 10));
+		return false;
+	}
+
+}
+
+void HardCoreProtester::doSomething() {
+	int iceManX = getWorld()->getPlayer()->getX();
+	int iceManY = getWorld()->getPlayer()->getY();
+	if (!isAlive()) {
+		return;
+	}
+
+	if (waitTime > 0) { // in rest state
+		waitTime--;
+		return;
+	}
+
+	if (yellWaitTime > 0) { // decrement yell wait time 
+		yellWaitTime--;
+	}
+
+	turnWaitTime--;
+	resetWait(getWorld()->getLevel());
+
+	if (leaveTheOilFieldState) {
+		if (getX() == 60 && getY() == 60) { // protester reached spawn point
+			setDead();
+		}
+		int steps;
+		if (getWorld()->findShortestPath(60, 60, getX(), getY(), steps)) { // if shortest path found (to avoid jiggling bug)
+			Direction dir = getWorld()->dirToShortestPath(60, 60, getX(), getY());
+			//cout << dir << endl;
+			setDirection(dir);
+			takeStep(getX(), getY(), dir);
+		}
+		else {
+			// handle case where the shortest path cannot be found. Will pick a random direction to move to
+			Direction randDir = randomizeDirection();
+			while (!getWorld()->canMoveTo(getX(), getY(), randDir)) {
+				randDir = randomizeDirection();
+			}
+			setDirection(randDir);
+			takeStep(getX(), getY(), randDir);
+		}
+		return;
+	}
+
+	else {
+		// if more than 4.0 units away from the iceman
+		if (!getWorld()->isNearIceMan(this, 4)) {
+			int steps = 0;
+			int M = 16 + getWorld()->getLevel() * 2;
+			//cout << "M:" << M << endl;
+			steps = getWorld()->getShortestSteps(iceManX, iceManY, getX(), getY()); // get the shortest steps possible to take
+			//cout << steps << endl;
+			if (steps != -1 && steps <= M) {
+				if (getWorld()->findShortestPath(iceManX, iceManY, getX(), getY(), steps)) { // avoid the jiggling bug with this if shortest path can only be found
+					Direction dir = getWorld()->dirToShortestPath(iceManX, iceManY, getX(), getY());
+					setDirection(dir);
+					takeStep(getX(), getY(), dir);
+					return;
+				}
+				else {
+					//cout << "cant find" << endl;
+					// handle case where the shortest path cannot be found. Will pick a random direction to move to
+					Direction randDir = randomizeDirection();
+					while (!getWorld()->canMoveTo(getX(), getY(), randDir)) {
+						randDir = randomizeDirection();
+					}
+					setDirection(randDir);
+					takeStep(getX(), getY(), randDir);
+				}
+				return;
+			}
+		}
+
+		// is at yelling distance and facing iceman
+		if (getWorld()->isNearIceMan(this, 4) && getWorld()->isFacingIceMan(getX(), getY(), getDirection())) {
+			if (yellWaitTime == 0) {
+				if (getWorld()->getPlayer()->annoy(2)) { // iceman died
+					getWorld()->getPlayer()->setDead();
+					getWorld()->playSound(SOUND_PLAYER_GIVE_UP);
+				}
+				getWorld()->playSound(SOUND_PROTESTER_YELL);
+				resetYell();
+				return;
+			}
+		}
+
+		// move to iceman if in direct line of sight with no obstructions
+		Direction dirToPlayer = none;
+		if (getWorld()->lineOfSightToIceMan(this, dirToPlayer)) {
+			setDirection(dirToPlayer);
+			takeStep(getX(), getY(), getDirection());
+			numSquaresToMoveInCurrentDirection = 0;
+			return;
+		}
+
+
+		// generate new direction when move distance is at zero
+		if (numSquaresToMoveInCurrentDirection <= 0) {
+			// generate a random direction from up, down, right, left (avoid none)
+			Direction randDir = randomizeDirection();
+
+			// check if it can go that direction:
+			while (!getWorld()->canMoveTo(getX(), getY(), randDir)) {
+				randDir = randomizeDirection();
+			}
+
+			// update protester's direction and distance value
+			setDirection(randDir);
+			randomizeMoveNum();
+		}
+
+		// try to make a turn
+		if (turnWaitTime <= 0 && canSideTurn(getX(), getY(), getDirection())) {
+			switch (getDirection()) {
+			case up:
+			case down:
+				if (getWorld()->canMoveTo(getX(), getY(), right) && getWorld()->canMoveTo(getX(), getY(), left)) { // can turn to both
+					// randomize using enum values (left = 3 and right = 4)
+					Direction dir = static_cast<Direction>(3 + (rand() % 2));
+					setDirection(dir);
+				}
+				else if (getWorld()->canMoveTo(getX(), getY(), right)) {
+					setDirection(right);
+				}
+				else {
+					setDirection(left);
+				}
+				break;
+			case right:
+			case left:
+				if (getWorld()->canMoveTo(getX(), getY(), up) && getWorld()->canMoveTo(getX(), getY(), down)) { // can turn to both
+					// randomize using enum values (up = 1 and down = 2)
+					Direction dir = static_cast<Direction>(1 + (rand() % 2));
+
+				}
+				else if (getWorld()->canMoveTo(getX(), getY(), up)) {
+					setDirection(up);
+				}
+				else {
+					setDirection(down);
+				}
+				break;
+			}
+			randomizeMoveNum();
+			resetTurn();
+		}
+
+		// try to take a step
+		if (getWorld()->canMoveTo(getX(), getY(), getDirection())) {
+			takeStep(getX(), getY(), getDirection());
+			numSquaresToMoveInCurrentDirection--;
+		}
+
+		// reset distance so it will force to get a new direction
+		else if (!getWorld()->canMoveTo(getX(), getY(), getDirection())) {
+			numSquaresToMoveInCurrentDirection = 0;
+		}
+	}
+}
+
+bool HardCoreProtester::annoy(unsigned int amt) {
+	decrementHitPoints(amt);
+
+	if (getHitPoints() <= 0) {
+		waitTime = 0; // dont stun protester
+		leaveTheOilFieldState = true;
+		getWorld()->increaseScore(250);
+		getWorld()->playSound(SOUND_PROTESTER_GIVE_UP);
+		return true;
+	}
+	else {
+		// stun protester
+		waitTime = max(50, 100 - int(getWorld()->getLevel() * 10));
+		return false;
+	}
+
+}
+
+void HardCoreProtester::gotBribed() {
+	// stun for a bit
+	waitTime = max(50, 100 - int(getWorld()->getLevel() * 10));
+}
 void Boulder::doSomething() {
 	if (!isAlive()) {
 		return;
@@ -295,7 +646,6 @@ void GoldNugget::doSomething() {
 	}
 }
 
-
 void Sonar::doSomething() {
 	if (!isAlive()) {
 		return;
@@ -344,7 +694,6 @@ void WaterPool::doSomething() {
 
 	tickDecrement();
 }
-
 
 void Squirt::doSomething() {
 	if (!isAlive()) {
@@ -403,361 +752,4 @@ void Squirt::hitsProtester(StudentWorld* sw) {
 			}
 		}
 	}
-}
-
-
-void Protester::doSomething() {
-	int iceManX = getWorld()->getPlayer()->getX();
-	int iceManY = getWorld()->getPlayer()->getY();
-
-	if (!isAlive()) {
-		return;
-	}
-
-	if (waitTime > 0) { // in rest state
-		waitTime--;
-		return;
-	}
-
-	if (yellWaitTime > 0) { // decrement yell wait time 
-		yellWaitTime--;
-	}
-
-	turnWaitTime--;
-	resetWait(getWorld()->getLevel());
-
-	if (leaveTheOilFieldState) {
-		if (getX() == 60 && getY() == 60) { // protester reached spawn point
-			setDead();
-		}
-		int steps = 0;
-		if (getWorld()->findShortestPath(60, 60, getX(), getY(), steps)) { // if shortest path found (to avoid jiggling bug)
-			Direction dir = getWorld()->dirToShortestPath(60, 60, getX(), getY());
-			cout << dir << endl;
-			setDirection(dir);
-			takeStep(getX(), getY(), dir);
-		}
-		else {
-			// handle case where the shortest path cannot be found. Will pick a random direction to move to
-			Direction randDir = randomizeDirection();
-			while (!getWorld()->canMoveTo(getX(), getY(), randDir)) {
-				randDir = randomizeDirection();
-			}
-			setDirection(randDir);
-			takeStep(getX(), getY(), randDir);
-		}
-		return;
-	}
-
-	else {
-		// is at yelling distance and facing iceman
-		if (getWorld()->isNearIceMan(this, 4) && getWorld()->isFacingIceMan(getX(), getY(), getDirection())) {
-			if (yellWaitTime == 0) {
-				if (getWorld()->getPlayer()->annoy(2)) { // iceman died
-					getWorld()->getPlayer()->setDead();
-					getWorld()->playSound(SOUND_PLAYER_GIVE_UP);
-				}
-				getWorld()->playSound(SOUND_PROTESTER_YELL);
-				resetYell();
-				return;
-			}
-		}
-
-		// move to iceman if in direct line of sight with no obstructions
-		Direction dirToPlayer = none;
-		if (getWorld()->lineOfSightToIceMan(this, dirToPlayer)) {
-			setDirection(dirToPlayer);
-			takeStep(getX(), getY(), getDirection());
-			numSquaresToMoveInCurrentDirection = 0;
-			return;
-		}
-
-
-		// generate new direction when move distance is at zero
-		if (numSquaresToMoveInCurrentDirection <= 0) {
-			// generate a random direction from up, down, right, left (avoid none)
-			Direction randDir = randomizeDirection();
-
-			// check if it can go that direction:
-			while (!getWorld()->canMoveTo(getX(), getY(), randDir)) {
-				randDir = randomizeDirection();
-			}
-
-			// update protester's direction and distance value
-			setDirection(randDir);
-			randomizeMoveNum();
-		}
-
-		// try to make a turn
-		if (turnWaitTime <= 0 && canSideTurn(getX(), getY(), getDirection())) {
-			switch (getDirection()) {
-			case up:
-			case down:
-				if (getWorld()->canMoveTo(getX(), getY(), right) && getWorld()->canMoveTo(getX(), getY(), left)) { // can turn to both
-					// randomize using enum values (left = 3 and right = 4)
-					Direction dir = static_cast<Direction>(3 + (rand() % 2));
-					setDirection(dir);
-				}
-				else if (getWorld()->canMoveTo(getX(), getY(), right)) {
-					setDirection(right);
-				}
-				else {
-					setDirection(left);
-				}
-				break;
-			case right:
-			case left:
-				if (getWorld()->canMoveTo(getX(), getY(), up) && getWorld()->canMoveTo(getX(), getY(), down)) { // can turn to both
-					// randomize using enum values (up = 1 and down = 2)
-					Direction dir = static_cast<Direction>(1 + (rand() % 2));
-
-				}
-				else if (getWorld()->canMoveTo(getX(), getY(), up)) {
-					setDirection(up);
-				}
-				else {
-					setDirection(down);
-				}
-				break;
-			}
-			randomizeMoveNum();
-			resetTurn();
-		}
-
-		// try to take a step
-		if (getWorld()->canMoveTo(getX(), getY(), getDirection())) {
-			takeStep(getX(), getY(), getDirection());
-			numSquaresToMoveInCurrentDirection--;
-		}
-
-		// reset distance so it will force to get a new direction
-		else if (!getWorld()->canMoveTo(getX(), getY(), getDirection())) {
-			numSquaresToMoveInCurrentDirection = 0;
-		}
-	}
-}
-
-GraphObject::Direction Protester::randomizeDirection() {
-	// generate a random direction from up, down, right, left (avoid none)
-	Direction random = static_cast<Direction>(1 + (rand() % right));
-	return random;
-}
-
-
-bool Protester::canSideTurn(const int x, const int y, Direction direction) {
-	// perpendicular turns: 
-	// if looking up or down -> can turn right  left
-	// right or left -> up or down
-	if (direction == right || direction == left) {
-		if (getWorld()->canMoveTo(x, y, up) || getWorld()->canMoveTo(x, y, down)) {
-			return true;
-		}
-	}
-	else if (direction == up || direction == down) {
-		if (getWorld()->canMoveTo(x, y, right) || getWorld()->canMoveTo(x, y, left)) {
-			return true;
-		}
-	}
-	return false;
-}
-
-bool Protester::annoy(unsigned int amt) {
-	decrementHitPoints(amt);
-
-	if (getHitPoints() <= 0) {
-		waitTime = 0; // dont stun protester
-		leaveTheOilFieldState = true;
-		getWorld()->increaseScore(100);
-		getWorld()->playSound(SOUND_PROTESTER_GIVE_UP);
-		return true;
-	}
-	else {
-		// stun protester
-		waitTime = max(50, 100 - int(getWorld()->getLevel() * 10));
-		return false;
-	}
-
-}
-
-
-void HardCoreProtester::doSomething() {
-	int iceManX = getWorld()->getPlayer()->getX();
-	int iceManY = getWorld()->getPlayer()->getY();
-	if (!isAlive()) {
-		return;
-	}
-
-	if (waitTime > 0) { // in rest state
-		waitTime--;
-		return;
-	}
-
-	if (yellWaitTime > 0) { // decrement yell wait time 
-		yellWaitTime--;
-	}
-
-	turnWaitTime--;
-	resetWait(getWorld()->getLevel());
-
-	if (leaveTheOilFieldState) {
-		if (getX() == 60 && getY() == 60) { // protester reached spawn point
-			setDead();
-		}
-		int steps;
-		if (getWorld()->findShortestPath(60, 60, getX(), getY(), steps)) { // if shortest path found (to avoid jiggling bug)
-			Direction dir = getWorld()->dirToShortestPath(60, 60, getX(), getY());
-			cout << dir << endl;
-			setDirection(dir);
-			takeStep(getX(), getY(), dir);
-		}
-		else {
-			// handle case where the shortest path cannot be found. Will pick a random direction to move to
-			Direction randDir = randomizeDirection();
-			while (!getWorld()->canMoveTo(getX(), getY(), randDir)) {
-				randDir = randomizeDirection();
-			}
-			setDirection(randDir);
-			takeStep(getX(), getY(), randDir);
-		}
-		return;
-	}
-
-	else {
-		// if more than 4.0 units away from the iceman
-		if (!getWorld()->isNearIceMan(this, 4)) {
-			int steps = 0;
-			int M = 16 + getWorld()->getLevel() * 2;
-			cout << "M:" << M << endl;
-			steps = getWorld()->getShortestSteps(iceManX, iceManY, getX(), getY()); // get the shortest steps possible to take
-			cout << steps << endl;
-			if (steps != -1 && steps <= M) {
-				if (getWorld()->findShortestPath(iceManX, iceManY, getX(), getY(), steps)) { // avoid the jiggling bug with this if shortest path can only be found
-					Direction dir = getWorld()->dirToShortestPath(iceManX, iceManY, getX(), getY());
-					setDirection(dir);
-					takeStep(getX(), getY(), dir);
-					return;
-				}
-				else {
-					cout << "cant find" << endl;
-					// handle case where the shortest path cannot be found. Will pick a random direction to move to
-					Direction randDir = randomizeDirection();
-					while (!getWorld()->canMoveTo(getX(), getY(), randDir)) {
-						randDir = randomizeDirection();
-					}
-					setDirection(randDir);
-					takeStep(getX(), getY(), randDir);
-				}
-				return;
-			}
-		}
-
-		// is at yelling distance and facing iceman
-		if (getWorld()->isNearIceMan(this, 4) && getWorld()->isFacingIceMan(getX(), getY(), getDirection())) {
-			if (yellWaitTime == 0) {
-				if (getWorld()->getPlayer()->annoy(2)) { // iceman died
-					getWorld()->getPlayer()->setDead();
-					getWorld()->playSound(SOUND_PLAYER_GIVE_UP);
-				}
-				getWorld()->playSound(SOUND_PROTESTER_YELL);
-				resetYell();
-				return;
-			}
-		}
-
-		// move to iceman if in direct line of sight with no obstructions
-		Direction dirToPlayer = none;
-		if (getWorld()->lineOfSightToIceMan(this, dirToPlayer)) {
-			setDirection(dirToPlayer);
-			takeStep(getX(), getY(), getDirection());
-			numSquaresToMoveInCurrentDirection = 0;
-			return;
-		}
-
-
-		// generate new direction when move distance is at zero
-		if (numSquaresToMoveInCurrentDirection <= 0) {
-			// generate a random direction from up, down, right, left (avoid none)
-			Direction randDir = randomizeDirection();
-
-			// check if it can go that direction:
-			while (!getWorld()->canMoveTo(getX(), getY(), randDir)) {
-				randDir = randomizeDirection();
-			}
-
-			// update protester's direction and distance value
-			setDirection(randDir);
-			randomizeMoveNum();
-		}
-
-		// try to make a turn
-		if (turnWaitTime <= 0 && canSideTurn(getX(), getY(), getDirection())) {
-			switch (getDirection()) {
-			case up:
-			case down:
-				if (getWorld()->canMoveTo(getX(), getY(), right) && getWorld()->canMoveTo(getX(), getY(), left)) { // can turn to both
-					// randomize using enum values (left = 3 and right = 4)
-					Direction dir = static_cast<Direction>(3 + (rand() % 2));
-					setDirection(dir);
-				}
-				else if (getWorld()->canMoveTo(getX(), getY(), right)) {
-					setDirection(right);
-				}
-				else {
-					setDirection(left);
-				}
-				break;
-			case right:
-			case left:
-				if (getWorld()->canMoveTo(getX(), getY(), up) && getWorld()->canMoveTo(getX(), getY(), down)) { // can turn to both
-					// randomize using enum values (up = 1 and down = 2)
-					Direction dir = static_cast<Direction>(1 + (rand() % 2));
-
-				}
-				else if (getWorld()->canMoveTo(getX(), getY(), up)) {
-					setDirection(up);
-				}
-				else {
-					setDirection(down);
-				}
-				break;
-			}
-			randomizeMoveNum();
-			resetTurn();
-		}
-
-		// try to take a step
-		if (getWorld()->canMoveTo(getX(), getY(), getDirection())) {
-			takeStep(getX(), getY(), getDirection());
-			numSquaresToMoveInCurrentDirection--;
-		}
-
-		// reset distance so it will force to get a new direction
-		else if (!getWorld()->canMoveTo(getX(), getY(), getDirection())) {
-			numSquaresToMoveInCurrentDirection = 0;
-		}
-	}
-}
-
-
-bool HardCoreProtester::annoy(unsigned int amt) {
-	decrementHitPoints(amt);
-
-	if (getHitPoints() <= 0) {
-		waitTime = 0; // dont stun protester
-		leaveTheOilFieldState = true;
-		getWorld()->increaseScore(250);
-		getWorld()->playSound(SOUND_PROTESTER_GIVE_UP);
-		return true;
-	}
-	else {
-		// stun protester
-		waitTime = max(50, 100 - int(getWorld()->getLevel() * 10));
-		return false;
-	}
-
-}
-
-void HardCoreProtester::gotBribed() {
-	// stun for a bit
-	waitTime = max(50, 100 - int(getWorld()->getLevel() * 10));
 }
