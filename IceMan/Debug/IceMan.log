@@ -1,0 +1,4 @@
+﻿  StudentWorld.cpp
+C:\Users\abbie\OneDrive\Documents\CSCI 30\IceMan\Iceman-Project\IceMan\StudentWorld.cpp(267,15): warning C4244: 'initializing': conversion from 'double' to 'int', possible loss of data
+C:\Users\abbie\OneDrive\Documents\CSCI 30\IceMan\Iceman-Project\IceMan\StudentWorld.cpp(274,15): warning C4244: 'initializing': conversion from 'double' to 'int', possible loss of data
+  IceMan.vcxproj -> C:\Users\abbie\OneDrive\Documents\CSCI 30\IceMan\Iceman-Project\Debug\IceMan.exe
