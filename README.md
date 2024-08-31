@@ -48,15 +48,14 @@ At the start of each level, the Iceman is equipped with full health, water for t
 * Sonar - Z
 * Shoot - Space
 
+## How to Run
+#### Windows
+1. In terminal: `git clone https://github.com/andreaasprer/IceMan.git`
+2. Open in Visual Studio and run the project.
+
 ## Assignment Overview
 For this assignment, we were tasked to edit 4 files: StudentWorld.h, StudentWorld.cpp, Actor.h, and Actor.cpp. 
 ### Key Features
 #### Actor Inheritance
 ![ClassDiagram1](https://github.com/user-attachments/assets/646e32f8-f268-48cd-9829-83cd11c9611e)
 All live actors in the game are managed using a list of pointers to the base abstract Actor class. The Actor class includes pure virtual functions like doSomething(), which ensure code reusability and polymorphism. This design allows the game engine to treat all actors uniformly, regardless of their specific derived type. During each game tick, the list is iterated through, and the doSomething() method is called on each actor.  
-
-## How to Run
-#### Windows
-1. In terminal: `git clone https://github.com/andreaasprer/IceMan.git`
-2. Open in Visual Studio and run the project.
-
